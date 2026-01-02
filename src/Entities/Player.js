@@ -86,7 +86,7 @@ export default class Player {
 
                 if (Math.abs(angleDiff) < arc / 2) {
                     // HIT!
-                    if (ent.constructor.name === 'Chest') {
+                    if (ent.type === 'Chest') {
                         if (ent.hp > 0 && !ent.invulnerable) {
                             ent.takeDamage(this.game.stats.damage);
 
@@ -98,7 +98,7 @@ export default class Player {
                             ent.invulnerable = true;
                             setTimeout(() => ent.invulnerable = false, 200);
                         }
-                    } else if (ent.constructor.name === 'Rock') {
+                    } else if (ent.type === 'Rock') {
                         if (!this.game.input.rockHitCooldown) {
                             this.game.energy -= 10;
                             this.game.shake = 10;
@@ -115,7 +115,7 @@ export default class Player {
                             this.game.input.rockHitCooldown = true;
                             setTimeout(() => this.game.input.rockHitCooldown = false, 500);
                         }
-                    } else if (ent.constructor.name === 'Crab') {
+                    } else if (ent.type === 'Crab') {
                         if (ent.hp > 0 && !ent.invulnerable) {
                             const dmg = this.game.stats.damage;
                             ent.takeDamage(dmg);

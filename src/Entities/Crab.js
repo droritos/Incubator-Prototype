@@ -7,6 +7,7 @@ export default class Crab {
         this.y = y;
         this.width = 40;
         this.height = 40;
+        this.type = 'Crab';
         this.markedForDeletion = false;
 
         this.maxHp = 100;

@@ -5,13 +5,17 @@ export default class Rock {
         this.game = game;
         this.x = x;
         this.y = y;
-        this.width = 60;
-        this.height = 60;
+        this.width = 40;
+        this.height = 40;
+        this.type = 'Rock';
+        this.markedForDeletion = false;
     }
 
-    update(dt) { }
+    update(dt) {
+        // Static
+    }
 
     draw(ctx) {
-        drawSprite(ctx, this.game.assets.rock, this.x, this.y, this.width, this.height);
+        drawSprite(ctx, this.game.assets.rock, this.x, this.y, this.width, this.height, 0);
     }
 }
