@@ -20,7 +20,8 @@ body {
 }
 
 #hud.hidden,
-#shop-overlay.hidden {
+#shop-overlay.hidden,
+#start-screen.hidden {
   display: none;
 }
 
