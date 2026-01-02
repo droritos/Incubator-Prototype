@@ -138,25 +138,21 @@ export default class Game {
         this.texts = []; // Reset texts too
         this.shake = 0;
 
+        // Reset Pet
+        if (this.stats.petLevel > 0) {
+            const type = (this.stats.petLevel === 2) ? 'parrot' : 'carrot';
+            this.pet = new Pet(this, type);
+        } else {
+            this.pet = null;
+        }
+
         // Static Spawning - Immediate
         // Chests
-        for (let i = 0; i < 15; i++) {
-            const x = Math.random() * (this.canvas.width - 100) + 50;
-            const y = Math.random() * (this.canvas.height - 100) + 50;
-            this.entities.push(new Chest(this, x, y));
-        }
+        for (let i = 0; i < 15; i++) this.spawnEntity('chest');
         // Rocks
-        for (let i = 0; i < 8; i++) {
-            const x = Math.random() * (this.canvas.width - 100) + 50;
-            const y = Math.random() * (this.canvas.height - 100) + 50;
-            this.entities.push(new Rock(this, x, y));
-        }
+        for (let i = 0; i < 15; i++) this.spawnEntity('rock');
         // Crabs
-        for (let i = 0; i < 5; i++) {
-            const x = Math.random() * (this.canvas.width - 100) + 50;
-            const y = Math.random() * (this.canvas.height - 100) + 50;
-            this.entities.push(new Crab(this, x, y));
-        }
+        for (let i = 0; i < 10; i++) this.spawnEntity('crab');
 
         console.log(`Spawned ${this.entities.length} entities.`);
         this.ui.showHUD();
@@ -193,6 +189,7 @@ export default class Game {
             }
 
             if (this.player) this.player.update(dt);
+            if (this.pet) this.pet.update(dt);
 
             // Update entities
             this.entities.forEach(ent => ent.update(dt));
@@ -203,6 +200,21 @@ export default class Game {
             this.entities = this.entities.filter(e => !e.markedForDeletion);
             this.particles = this.particles.filter(p => !p.markedForDeletion);
             this.texts = this.texts.filter(t => !t.markedForDeletion);
+
+            // Cannon Logic
+            if (this.stats.cannonLevel > 0) {
+                this.cannonTimer += dt;
+                if (this.cannonTimer >= 5.0) { // Every 5 seconds
+                    this.cannonTimer = 0;
+                    this.fireCannons();
+                }
+            }
+
+            // Respawn Logic
+            if (this.entities.length < 20) {
+                if (Math.random() > 0.5) this.spawnEntity('chest');
+                else this.spawnEntity('crab');
+            }
         }
     }
 
@@ -238,6 +250,7 @@ export default class Game {
             // Sort by Y for depth
             const allRenderables = [...this.entities];
             if (this.player) allRenderables.push(this.player);
+            if (this.pet) allRenderables.push(this.pet);
 
             allRenderables.sort((a, b) => a.y - b.y);
 
@@ -249,5 +262,26 @@ export default class Game {
         this.ctx.restore();
 
         this.ui.update();
+    }
+    spawnEntity(type) {
+        const x = Math.random() * (this.canvas.width - 100) + 50;
+        const y = Math.random() * (this.canvas.height - 100) + 50;
+        if (type === 'chest') this.entities.push(new Chest(this, x, y));
+        if (type === 'rock') this.entities.push(new Rock(this, x, y));
+        if (type === 'crab') this.entities.push(new Crab(this, x, y));
+    }
+
+    fireCannons() {
+        const count = this.stats.cannonLevel * 1;
+        for (let i = 0; i < count; i++) {
+            const tx = this.player.x + (Math.random() - 0.5) * 600;
+            const ty = this.player.y + (Math.random() - 0.5) * 600;
+
+            setTimeout(() => {
+                this.entities.push(new CannonBall(this, tx, ty));
+            }, i * 200);
+        }
+
+        this.texts.push(new FloatingText("CANNON BARRAGE!", this.player.x, this.player.y - 100, '#ff4400', 30));
     }
 }
