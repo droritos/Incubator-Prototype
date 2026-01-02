@@ -5,11 +5,11 @@ export default class Player {
         this.game = game;
         this.x = game.canvas.width / 2;
         this.y = game.canvas.height / 2;
-        this.width = 64; // Sprite size roughly
+        this.width = 64;
         this.height = 64;
 
         this.speed = game.stats.speed;
-        this.color = '#ff4d4d'; // Fallback
+        this.color = '#ff4d4d';
 
         // Combat
         this.swingTimer = 0;
@@ -17,10 +17,14 @@ export default class Player {
         this.isSwinging = false;
         this.swingDuration = 0.2;
         this.swordAngle = 0;
+
+        // Visuals
+        this.swingDirection = 1; // 1 (right->left) or -1 (left->right) relative to aim
+        this.facingX = 1; // 1 or -1
     }
 
     update(dt) {
-        // ALWAYS update aim to look at mouse
+        // Aim Logic
         const mdX = this.game.input.mouse.x - this.x;
         const mdY = this.game.input.mouse.y - this.y;
         this.swordAngle = Math.atan2(mdY, mdX);
@@ -38,6 +42,10 @@ export default class Player {
             const len = Math.sqrt(dx * dx + dy * dy);
             dx /= len;
             dy /= len;
+
+            // Update Facing Direction based on movement
+            if (dx > 0) this.facingX = 1;
+            if (dx < 0) this.facingX = -1;
         }
 
         this.x += dx * this.speed * dt;
@@ -45,7 +53,7 @@ export default class Player {
         this.x = Math.max(0, Math.min(this.game.canvas.width, this.x));
         this.y = Math.max(0, Math.min(this.game.canvas.height, this.y));
 
-        this.swingCooldown = Math.max(0.2, this.game.stats.swingCooldown);
+        this.swingCooldown = Math.max(0.1, this.game.stats.swingCooldown); // Cap minimum cooldown
 
         if (!this.isSwinging) {
             this.swingTimer += dt;
@@ -66,6 +74,7 @@ export default class Player {
     startSwing() {
         this.isSwinging = true;
         this.swingTimer = 0;
+        this.swingDirection *= -1; // Alternate direction
     }
 
     checkCollisions() {
@@ -155,10 +164,11 @@ export default class Player {
         ctx.stroke();
         ctx.restore();
 
-        // Sprite
+        // Sprite (Frozen Rotation, just flip X)
         if (this.game.assets && this.game.assets.player) {
-            const angle = this.swordAngle - Math.PI / 2;
-            drawSprite(ctx, this.game.assets.player, this.x, this.y, this.width, this.height, angle);
+            // Draw sprite upright ("angle" 0), scaled by facingX
+            // Adjust offset to keep centered
+            drawSprite(ctx, this.game.assets.player, this.x, this.y, this.width, this.height, 0, this.facingX);
         } else {
             drawBlockyRect(ctx, this.x, this.y, 30, 50, this.color);
         }
@@ -171,10 +181,23 @@ export default class Player {
 
         if (this.isSwinging) {
             const progress = this.swingTimer / this.swingDuration;
-            const offset = -arc / 2 + (arc * progress);
+            // Alternating Swing Logic
+            // If direction is 1: Start at -arc/2, go to arc/2
+            // If direction is -1: Start at arc/2, go to -arc/2
+            let start = -arc / 2;
+            let end = arc / 2;
+
+            if (this.swingDirection === -1) {
+                start = arc / 2;
+                end = -arc / 2;
+            }
+
+            const offset = start + (end - start) * progress;
             displayAngle += offset;
         } else {
-            displayAngle += arc / 2;
+            // Idle position depends on last swing direction? Or just keep it at one side?
+            // Usually keeping it at readable "ready" pos is good. Let's say right side.
+            displayAngle += (arc / 2) * this.swingDirection;
         }
 
         ctx.rotate(displayAngle);
@@ -197,7 +220,15 @@ export default class Player {
         if (this.isSwinging) {
             const progress = this.swingTimer / this.swingDuration;
             ctx.beginPath();
-            ctx.arc(-20, 0, reach, -0.1, 0.1);
+            // Draw arc in direction of swing
+            // If swinging "forward" (negative to positive angle relative to aim), draw arc
+            const startAng = (this.swingDirection === 1) ? -arc / 2 : arc / 2;
+            const endAng = (this.swingDirection === 1) ? (-arc / 2 + arc * progress) : (arc / 2 - arc * progress);
+
+            // Simple line trail for now
+            ctx.moveTo(-20, 0);
+            ctx.lineTo(reach - 20, 0);
+
             ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 - progress})`;
             ctx.lineWidth = 4;
             ctx.stroke();

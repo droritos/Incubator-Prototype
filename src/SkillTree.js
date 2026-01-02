@@ -58,6 +58,16 @@ export const SKILL_TREE_DATA = [
         effect: { arc: 30 },
         purchased: false,
         parent: 'damage_1'
+    },
+    {
+        id: 'speed_attack_1',
+        name: 'Berserker',
+        description: '+20% Atk Speed',
+        cost: 250,
+        x: 470, y: 50,
+        effect: { swingCooldown: -0.2 },
+        purchased: false,
+        parent: 'damage_1'
     }
 ];
 

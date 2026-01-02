@@ -23,13 +23,14 @@ export function drawBlockyRect(ctx, x, y, w, h, color) {
     ctx.fillRect(x - w / 2, y - h, w, h);
 }
 
-export function drawSprite(ctx, image, x, y, width, height, angle = 0, opacity = 1) {
+export function drawSprite(ctx, image, x, y, width, height, angle = 0, scaleX = 1, opacity = 1) {
     if (!image) return;
 
     ctx.save();
     ctx.globalAlpha = opacity;
     ctx.translate(x, y);
     ctx.rotate(angle);
+    ctx.scale(scaleX, 1); // Allow flipping
 
     // Draw centered
     // We assume the sprite is roughly centered in the image.
