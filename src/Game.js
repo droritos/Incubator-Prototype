@@ -37,9 +37,11 @@ export default class Game {
         this.stats = {
             speed: 250,
             damage: 50,
-            swingCooldown: 0.3,
-            range: 80, // Larger default range
-            arc: 0
+            swingCooldown: 0.4,
+            range: 80,
+            arc: 0,
+            cannonLevel: 0, // New Stat
+            petLevel: 0     // New Stat
         };
 
         // Configuration

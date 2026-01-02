@@ -15,7 +15,7 @@ export default class Player {
         this.swingTimer = 0;
         this.swingCooldown = Math.max(0.05, game.stats.swingCooldown);
         this.isSwinging = false;
-        this.swingDuration = 0.1; // Faster animation to match 0.1s cooldown
+        this.swingDuration = 0.2;
         this.swordAngle = 0;
 
         // Visuals

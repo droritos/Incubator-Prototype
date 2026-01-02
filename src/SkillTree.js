@@ -14,7 +14,7 @@ export const SKILL_TREE_DATA = [
         name: 'Peg Leg Polish',
         description: '+10% Movement Speed',
         cost: 50,
-        x: 170, y: 150,
+        x: 170, y: 130, // Was 150
         effect: { speed: 25 },
         purchased: false,
         parent: 'root'
@@ -24,7 +24,7 @@ export const SKILL_TREE_DATA = [
         name: 'Sharp Blade',
         description: '+25 Damage',
         cost: 100,
-        x: 370, y: 150,
+        x: 370, y: 130, // Was 150
         effect: { damage: 25 },
         purchased: false,
         parent: 'root'
@@ -34,7 +34,7 @@ export const SKILL_TREE_DATA = [
         name: 'Quick Hands',
         description: '-10% Swing Cooldown',
         cost: 150,
-        x: 270, y: 250,
+        x: 270, y: 210, // Was 250
         effect: { swingCooldown: -0.1 },
         purchased: false,
         parent: 'speed_1'
@@ -44,7 +44,7 @@ export const SKILL_TREE_DATA = [
         name: 'Long Reach',
         description: '+20% Sword Range',
         cost: 200,
-        x: 70, y: 300,
+        x: 70, y: 260, // Was 300
         effect: { range: 10 },
         purchased: false,
         parent: 'speed_1'
@@ -54,7 +54,7 @@ export const SKILL_TREE_DATA = [
         name: 'Wild Swing',
         description: 'Wider Swing Arc',
         cost: 300,
-        x: 470, y: 300,
+        x: 470, y: 260, // Was 300
         effect: { arc: 30 },
         purchased: false,
         parent: 'damage_1'
@@ -84,7 +84,7 @@ export const SKILL_TREE_DATA = [
         name: 'New Friend',
         description: 'Unlock Carrot Pet',
         cost: 400,
-        x: 270, y: 350,
+        x: 270, y: 290, // Was 350
         effect: { petLevel: 1 },
         purchased: false,
         parent: 'cooldown_1'
@@ -94,9 +94,8 @@ export const SKILL_TREE_DATA = [
         name: 'Best Friend',
         description: 'Evolve to Parrot',
         cost: 1000,
-        x: 270, y: 450,
-        effect: { petLevel: 1 }, // Cumulative? Game logic sets explicit level. 1=Carrot, 2=Parrot. 
-        // Logic in Game.js is check level value. So +=1 works if current is 1.
+        x: 270, y: 370, // Was 450 (Fixed overlap)
+        effect: { petLevel: 1 },
         purchased: false,
         parent: 'pet_1'
     }
