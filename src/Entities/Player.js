@@ -13,9 +13,9 @@ export default class Player {
 
         // Combat
         this.swingTimer = 0;
-        this.swingCooldown = Math.max(0.2, game.stats.swingCooldown);
+        this.swingCooldown = Math.max(0.05, game.stats.swingCooldown);
         this.isSwinging = false;
-        this.swingDuration = 0.2;
+        this.swingDuration = 0.1; // Faster animation to match 0.1s cooldown
         this.swordAngle = 0;
 
         // Visuals
@@ -53,7 +53,7 @@ export default class Player {
         this.x = Math.max(0, Math.min(this.game.canvas.width, this.x));
         this.y = Math.max(0, Math.min(this.game.canvas.height, this.y));
 
-        this.swingCooldown = Math.max(0.1, this.game.stats.swingCooldown); // Cap minimum cooldown
+        this.swingCooldown = Math.max(0.05, this.game.stats.swingCooldown); // Cap minimum cooldown
 
         if (!this.isSwinging) {
             this.swingTimer += dt;
