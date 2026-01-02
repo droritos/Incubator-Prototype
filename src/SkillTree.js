@@ -4,7 +4,7 @@ export const SKILL_TREE_DATA = [
         name: 'Pirate Basics',
         description: 'The start of your journey.',
         cost: 0,
-        x: 270, y: 50,
+        x: 270, y: 40, // -30
         effect: {},
         purchased: true,
         parent: null
@@ -14,7 +14,7 @@ export const SKILL_TREE_DATA = [
         name: 'Peg Leg Polish',
         description: '+10% Movement Speed',
         cost: 50,
-        x: 170, y: 130, // Was 150
+        x: 170, y: 120, // -30
         effect: { speed: 25 },
         purchased: false,
         parent: 'root'
@@ -24,7 +24,7 @@ export const SKILL_TREE_DATA = [
         name: 'Sharp Blade',
         description: '+25 Damage',
         cost: 100,
-        x: 370, y: 130, // Was 150
+        x: 370, y: 120, // -30
         effect: { damage: 25 },
         purchased: false,
         parent: 'root'
@@ -34,7 +34,7 @@ export const SKILL_TREE_DATA = [
         name: 'Quick Hands',
         description: '-10% Swing Cooldown',
         cost: 150,
-        x: 270, y: 210, // Was 250
+        x: 270, y: 200, // -30
         effect: { swingCooldown: -0.1 },
         purchased: false,
         parent: 'speed_1'
@@ -44,7 +44,7 @@ export const SKILL_TREE_DATA = [
         name: 'Long Reach',
         description: '+20% Sword Range',
         cost: 200,
-        x: 70, y: 260, // Was 300
+        x: 70, y: 250, // -30
         effect: { range: 10 },
         purchased: false,
         parent: 'speed_1'
@@ -54,7 +54,7 @@ export const SKILL_TREE_DATA = [
         name: 'Wild Swing',
         description: 'Wider Swing Arc',
         cost: 300,
-        x: 470, y: 260, // Was 300
+        x: 470, y: 250, // -30
         effect: { arc: 30 },
         purchased: false,
         parent: 'damage_1'
@@ -64,7 +64,7 @@ export const SKILL_TREE_DATA = [
         name: 'Berserker',
         description: '+20% Atk Speed',
         cost: 250,
-        x: 470, y: 50,
+        x: 470, y: 40, // -30
         effect: { swingCooldown: -0.2 },
         purchased: false,
         parent: 'damage_1'
@@ -74,7 +74,7 @@ export const SKILL_TREE_DATA = [
         name: 'Ship Support',
         description: 'Auto-fire Cannons',
         cost: 500,
-        x: 60, y: 50,
+        x: 60, y: 40, // -30
         effect: { cannonLevel: 1 },
         purchased: false,
         parent: 'speed_1'
@@ -84,7 +84,7 @@ export const SKILL_TREE_DATA = [
         name: 'New Friend',
         description: 'Unlock Carrot Pet',
         cost: 400,
-        x: 270, y: 290, // Was 350
+        x: 270, y: 280, // -30
         effect: { petLevel: 1 },
         purchased: false,
         parent: 'cooldown_1'
@@ -94,7 +94,7 @@ export const SKILL_TREE_DATA = [
         name: 'Best Friend',
         description: 'Evolve to Parrot',
         cost: 1000,
-        x: 270, y: 370, // Was 450 (Fixed overlap)
+        x: 270, y: 360, // -30
         effect: { petLevel: 1 },
         purchased: false,
         parent: 'pet_1'
