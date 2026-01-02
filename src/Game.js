@@ -1,63 +1,38 @@
-import Player from './Entities/Player.js';
-import UI from './UI.js';
-import { SkillTree } from './SkillTree.js';
-import Chest from './Entities/Chest.js';
-import Rock from './Entities/Rock.js';
-import Crab from './Entities/Crab.js';
+import CannonBall from './Entities/CannonBall.js';
+import Pet from './Entities/Pet.js';
+import { FloatingText } from './Entities/FloatingText.js';
 
 export default class Game {
     constructor(canvas) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
-
-        // Resize canvas to full window
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
-
-        this.input = {
-            keys: {},
-            mouse: { x: 0, y: 0 },
-            rockHitCooldown: false
-        };
-        this.setupInput();
-
-        this.state = 'START'; // START, PLAYING, SHOP, GAMEOVER
-        this.lastTime = 0;
-
-        this.player = null;
-        this.entities = [];
-        this.particles = [];
-        this.texts = [];
-        this.gold = 0; // Persistent Gold
-        this.energy = 100;
-        this.maxEnergy = 100;
-        this.shake = 0;
-
-        // Persistent Upgrades
+        // ... (constructor same until stats)
         this.stats = {
             speed: 250,
             damage: 50,
             swingCooldown: 0.1,
-            range: 80, // Larger default range
-            arc: 0
+            range: 80,
+            arc: 0,
+            cannonLevel: 0, // New Stat
+            petLevel: 0     // New Stat
         };
 
-        // Configuration
-        this.energyDecayRate = 8.0;
-
-        this.ui = new UI(this);
-        this.skillTree = new SkillTree(this);
+        // ...
 
         this.assets = {
             player: new Image(),
             chest: new Image(),
             rock: new Image(),
             crab: new Image(),
-            sand: new Image()
+            sand: new Image(),
+            cannonball: new Image(),
+            carrot: new Image(),
+            parrot: new Image()
         };
         this.assetsLoaded = 0;
-        this.totalAssets = 5;
-        this.bgPattern = null;
+        this.totalAssets = 8; // Increased
+
+        // Timers
+        this.cannonTimer = 0;
+        this.pet = null;
 
         this.loadAssets();
     }
@@ -91,6 +66,9 @@ export default class Game {
         load('rock', './sprites/rock.png');
         load('crab', './sprites/crab.png');
         load('sand', './sprites/sand.png');
+        load('cannonball', './sprites/cannonball.png');
+        load('carrot', './sprites/carrot.png');
+        load('parrot', './sprites/parrot.png');
     }
 
     resize() {
@@ -135,31 +113,32 @@ export default class Game {
         this.player = new Player(this);
         this.entities = [];
         this.particles = [];
-        this.texts = []; // Reset texts too
+        this.texts = [];
         this.shake = 0;
 
-        // Static Spawning - Immediate
-        // Chests
-        for (let i = 0; i < 15; i++) {
-            const x = Math.random() * (this.canvas.width - 100) + 50;
-            const y = Math.random() * (this.canvas.height - 100) + 50;
-            this.entities.push(new Chest(this, x, y));
+        // Reset Pet
+        if (this.stats.petLevel > 0) {
+            const type = (this.stats.petLevel === 2) ? 'parrot' : 'carrot';
+            this.pet = new Pet(this, type);
+        } else {
+            this.pet = null;
         }
-        // Rocks
-        for (let i = 0; i < 8; i++) {
-            const x = Math.random() * (this.canvas.width - 100) + 50;
-            const y = Math.random() * (this.canvas.height - 100) + 50;
-            this.entities.push(new Rock(this, x, y));
-        }
-        // Crabs
-        for (let i = 0; i < 5; i++) {
-            const x = Math.random() * (this.canvas.width - 100) + 50;
-            const y = Math.random() * (this.canvas.height - 100) + 50;
-            this.entities.push(new Crab(this, x, y));
-        }
+
+        // Spawn initial entities - TRIPLED for chaos!
+        for (let i = 0; i < 15; i++) this.spawnEntity('chest');
+        for (let i = 0; i < 15; i++) this.spawnEntity('rock');
+        for (let i = 0; i < 10; i++) this.spawnEntity('crab');
 
         console.log(`Spawned ${this.entities.length} entities.`);
         this.ui.showHUD();
+    }
+
+    spawnEntity(type) {
+        const x = Math.random() * (this.canvas.width - 100) + 50;
+        const y = Math.random() * (this.canvas.height - 100) + 50;
+        if (type === 'chest') this.entities.push(new Chest(this, x, y));
+        if (type === 'rock') this.entities.push(new Rock(this, x, y));
+        if (type === 'crab') this.entities.push(new Crab(this, x, y));
     }
 
     start() {
@@ -193,6 +172,7 @@ export default class Game {
             }
 
             if (this.player) this.player.update(dt);
+            if (this.pet) this.pet.update(dt);
 
             // Update entities
             this.entities.forEach(ent => ent.update(dt));
@@ -203,7 +183,43 @@ export default class Game {
             this.entities = this.entities.filter(e => !e.markedForDeletion);
             this.particles = this.particles.filter(p => !p.markedForDeletion);
             this.texts = this.texts.filter(t => !t.markedForDeletion);
+
+            // Cannon Logic
+            if (this.stats.cannonLevel > 0) {
+                this.cannonTimer += dt;
+                if (this.cannonTimer >= 5.0) { // Every 5 seconds
+                    this.cannonTimer = 0;
+                    this.fireCannons();
+                }
+            }
+
+            // Respawn Logic to keep scene full
+            if (this.entities.length < 20) {
+                if (Math.random() > 0.5) this.spawnEntity('chest');
+                else this.spawnEntity('crab');
+            }
         }
+    }
+
+    fireCannons() {
+        const count = this.stats.cannonLevel * 1; // 1 per level
+        for (let i = 0; i < count; i++) {
+            // Pick random target area near player or random enemy
+            const tx = this.player.x + (Math.random() - 0.5) * 600;
+            const ty = this.player.y + (Math.random() - 0.5) * 600;
+
+            // Delay each slightly
+            setTimeout(() => {
+                // We fake a projectile entity or add to entities list?
+                // Let's add to entities list if it handles generic updates, or separate list?
+                // CannonBall has update/draw, so adding to entities array works nicely if we check type!
+                // But entities array currently assumes local object. CannonBall is imported.
+                // Let's just push it to entities.
+                this.entities.push(new CannonBall(this, tx, ty));
+            }, i * 200);
+        }
+
+        this.texts.push(new FloatingText("CANNON BARRAGE!", this.player.x, this.player.y - 100, '#ff4400', 30));
     }
 
     gameOver() {
@@ -238,6 +254,7 @@ export default class Game {
             // Sort by Y for depth
             const allRenderables = [...this.entities];
             if (this.player) allRenderables.push(this.player);
+            if (this.pet) allRenderables.push(this.pet);
 
             allRenderables.sort((a, b) => a.y - b.y);
 

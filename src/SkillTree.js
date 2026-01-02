@@ -68,6 +68,37 @@ export const SKILL_TREE_DATA = [
         effect: { swingCooldown: -0.2 },
         purchased: false,
         parent: 'damage_1'
+    },
+    {
+        id: 'cannon_1',
+        name: 'Ship Support',
+        description: 'Auto-fire Cannons',
+        cost: 500,
+        x: 60, y: 50,
+        effect: { cannonLevel: 1 },
+        purchased: false,
+        parent: 'speed_1'
+    },
+    {
+        id: 'pet_1',
+        name: 'New Friend',
+        description: 'Unlock Carrot Pet',
+        cost: 400,
+        x: 270, y: 350,
+        effect: { petLevel: 1 },
+        purchased: false,
+        parent: 'cooldown_1'
+    },
+    {
+        id: 'pet_2',
+        name: 'Best Friend',
+        description: 'Evolve to Parrot',
+        cost: 1000,
+        x: 270, y: 450,
+        effect: { petLevel: 1 }, // Cumulative? Game logic sets explicit level. 1=Carrot, 2=Parrot. 
+        // Logic in Game.js is check level value. So +=1 works if current is 1.
+        purchased: false,
+        parent: 'pet_1'
     }
 ];
 
@@ -186,5 +217,7 @@ export class SkillTree {
         if (effect.swingCooldown) stats.swingCooldown += effect.swingCooldown;
         if (effect.range) stats.range += effect.range;
         if (effect.arc) stats.arc += effect.arc;
+        if (effect.cannonLevel) stats.cannonLevel += effect.cannonLevel;
+        if (effect.petLevel) stats.petLevel += effect.petLevel;
     }
 }
