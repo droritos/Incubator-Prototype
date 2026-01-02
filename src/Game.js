@@ -99,8 +99,20 @@ export default class Game {
     }
 
     setupInput() {
-        window.addEventListener('keydown', e => this.input.keys[e.key.toLowerCase()] = true);
-        window.addEventListener('keyup', e => this.input.keys[e.key.toLowerCase()] = false);
+        window.addEventListener('keydown', e => {
+            if (e.code === 'KeyW' || e.key === 'w') this.input.keys['w'] = true;
+            if (e.code === 'KeyA' || e.key === 'a') this.input.keys['a'] = true;
+            if (e.code === 'KeyS' || e.key === 's') this.input.keys['s'] = true;
+            if (e.code === 'KeyD' || e.key === 'd') this.input.keys['d'] = true;
+            this.input.keys[e.key.toLowerCase()] = true; // Fallback for others
+        });
+        window.addEventListener('keyup', e => {
+            if (e.code === 'KeyW' || e.key === 'w') this.input.keys['w'] = false;
+            if (e.code === 'KeyA' || e.key === 'a') this.input.keys['a'] = false;
+            if (e.code === 'KeyS' || e.key === 's') this.input.keys['s'] = false;
+            if (e.code === 'KeyD' || e.key === 'd') this.input.keys['d'] = false;
+            this.input.keys[e.key.toLowerCase()] = false;
+        });
         window.addEventListener('mousemove', e => {
             const rect = this.canvas.getBoundingClientRect();
             this.input.mouse.x = e.clientX - rect.left;
