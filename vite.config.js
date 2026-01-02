@@ -1,6 +1,7 @@
 export default {
-    base: './', // Makes paths relative so it MIGHT work in some environments, but server is best
+    base: '/Incubator-Prototype/',
     build: {
-        outDir: 'dist'
+        outDir: 'docs',
+        emptyOutDir: true
     }
 }
