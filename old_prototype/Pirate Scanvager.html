@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pirate Scavenger</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #e0cda7; /* Sand Color */
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+        canvas { display: block; }
+        
+        /* HUD */
+        #ui-layer {
+            position: absolute;
+            top: 20px; left: 20px;
+            color: #3e2723;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .hud-text {
+            font-size: 24px; font-weight: bold; margin-bottom: 5px;
+            color: #ffd700; text-shadow: 2px 2px 0 #3e2723;
+        }
+        #energy-bar-container {
+            width: 300px; height: 20px;
+            background: rgba(62, 39, 35, 0.6);
+            border: 2px solid #3e2723; border-radius: 4px; overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        }
+        #energy-fill {
+            height: 100%; width: 100%;
+            background: linear-gradient(90deg, #ff6f00, #ffca28); /* Sunset colors */
+            transform-origin: left; transition: transform 0.1s linear;
+        }
+        #day-label {
+            position: absolute; right: 5px; top: 0; 
+            font-size: 12px; font-weight: bold; color: white; line-height: 20px;
+        }
+
+        /* --- SKILL TREE & GAME OVER UI --- */
+        #game-over {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(62, 39, 35, 0.95); /* Dark wood color */
+            backdrop-filter: blur(5px);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 10;
+            gap: 15px; 
+            overflow-y: auto; 
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        #game-over h1 { 
+            font-size: 40px; margin: 0; 
+            color: #ffca28; text-transform: uppercase; letter-spacing: 2px;
+            text-shadow: 3px 3px 0px #000;
+            flex-shrink: 0;
+        }
+        .header-stats { 
+            font-size: 24px; color: #ffd700; margin-bottom: 10px; font-family: monospace; 
+            flex-shrink: 0;
+        }
+        
+        #skill-tree-area {
+            position: relative;
+            width: 800px;
+            height: 50vh; 
+            max-height: 500px;
+            min-height: 300px;
+            border: 4px solid #8d6e63;
+            background: #d7ccc8; /* Old Map color */
+            border-radius: 4px;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            flex-shrink: 0;
+            background-image: repeating-linear-gradient(#d7ccc8 0 20px, #d0c4c0 20px 21px); /* Paper lines */
+        }
+
+        #tree-lines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .connection-line {
+            stroke: #5d4037; stroke-width: 4; stroke-dasharray: 10,5; /* Dashed map lines */
+            transition: stroke 0.3s;
+        }
+        .connection-line.unlocked { stroke: #d84315; stroke-width: 3; stroke-dasharray: 0; }
+
+        .tree-node {
+            position: absolute;
+            width: 60px; height: 60px;
+            background: #5d4037;
+            border: 3px solid #3e2723;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            cursor: pointer;
+            display: flex;
+            align-items: center; justify-content: center;
+            font-weight: bold; color: #d7ccc8;
+            transition: all 0.2s;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+        }
+        .tree-node:hover { transform: translate(-50%, -50%) scale(1.1); border-color: #ffd700; color: #fff; }
+        .tree-node.unlocked { border-color: #d84315; background: #ffab91; color: #bf360c; box-shadow: 0 0 15px #ff5722; }
+        .tree-node.affordable { animation: pulse-border 2s infinite; }
+        .tree-node.locked { opacity: 0.5; filter: grayscale(100%); cursor: not-allowed; }
+
+        .node-level {
+            position: absolute; bottom: -20px; font-size: 12px; color: #ffe0b2;
+            background: #3e2723; padding: 2px 6px; border-radius: 4px;
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: #ffd700; } 50% { border-color: #fff; } 100% { border-color: #ffd700; }
+        }
+
+        #node-details {
+            height: auto; min-height: 80px; text-align: center; color: #ffe0b2;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        #node-name { font-size: 20px; color: #ffca28; font-weight: bold; min-height: 24px; }
+        #node-desc { font-size: 14px; margin: 5px 0; min-height: 20px; }
+        #node-cost { font-size: 18px; color: #fff; font-weight: bold; min-height: 22px; }
+        #node-req { font-size: 14px; color: #ffab91; margin-top: 5px; min-height: 20px; }
+
+        #restart-btn {
+            padding: 12px 50px; font-size: 20px; font-weight: bold;
+            background: #ffca28; color: #3e2723;
+            border: none; border-radius: 4px; cursor: pointer;
+            box-shadow: 0 5px 0 #b28900; transition: transform 0.1s;
+            margin-top: 10px; margin-bottom: 20px; flex-shrink: 0;
+        }
+        #restart-btn:hover { background: #fff; transform: scale(1.05); }
+        #restart-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #b28900; }
+
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div class="hud-text">LOOT: <span id="score-display">0</span></div>
+        <div id="energy-bar-container">
+            <div id="energy-fill"></div>
+            <div id="day-label">TIDE COMING IN</div>
+        </div>
+        <div style="font-size: 14px; color: #5d4037; margin-top: 5px; text-shadow: 0px 0px 5px #fff;">WASD Move • MOUSE Aim • AUTO-SWING</div>
+    </div>
+
+    <div id="game-over">
+        <h1>TIDE IS HIGH</h1>
+        <div class="header-stats">TOTAL LOOT: <span id="shop-gold">0</span> G</div>
+        <div id="skill-tree-area">
+            <svg id="tree-lines"></svg>
+        </div>
+        <div id="node-details">
+            <div id="node-name">VISIT THE PORT</div>
+            <div id="node-desc" style="color: #bcaaa4;">Hover over an upgrade</div>
+            <div id="node-cost"></div>
+            <div id="node-req"></div>
+        </div>
+        <button id="restart-btn" onclick="resetGame()">SET SAIL</button>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let progression = {
+    gold: 0,
+    upgrades: {
+        damage: 1, arc: 1, range: 1, speed: 1, rate: 1
+    }
+};
+
+const UPGRADES = {
+    damage: {
+        id: 'damage', name: "SHARP BLADE", desc: "Open chests faster.",
+        x: 50, y: 30, baseCost: 10, costScale: 1.5,
+        apply: (lvl) => 2500 + (lvl-1) * 1000, req: null, reqLvl: 0
+    },
+    rate: {
+        id: 'rate', name: "QUICK HANDS", desc: "Swing your cutlass more often.",
+        x: 30, y: 55, baseCost: 15, costScale: 1.4,
+        apply: (lvl) => Math.max(0.2, 1.2 - (lvl-1) * 0.15), // Cooldown in seconds
+        req: 'damage', reqLvl: 1
+    },
+    arc: {
+        id: 'arc', name: "WILD SWING", desc: "Widen your swing to hit more loot.",
+        x: 30, y: 80, baseCost: 25, costScale: 1.6,
+        apply: (lvl) => Math.min(Math.PI * 1.5, (Math.PI / 4) + (lvl-1) * (Math.PI / 8)), // Angle in radians
+        req: 'rate', reqLvl: 2
+    },
+    speed: {
+        id: 'speed', name: "PEG LEG POLISH", desc: "Run faster on the sand.",
+        x: 70, y: 55, baseCost: 10, costScale: 1.3,
+        apply: (lvl) => 250 + (lvl-1) * 25, req: 'damage', reqLvl: 1
+    },
+    range: { 
+        id: 'range', name: "LONG REACH", desc: "A longer sword hits further away.",
+        x: 70, y: 80, baseCost: 30, costScale: 1.5,
+        apply: (lvl) => 100 + (lvl-1) * 15, req: 'speed', reqLvl: 2 
+    }
+};
+
+function getStats() {
+    return {
+        damage: UPGRADES.damage.apply(progression.upgrades.damage),
+        cooldown: UPGRADES.rate.apply(progression.upgrades.rate),
+        arc: UPGRADES.arc.apply(progression.upgrades.arc),
+        speed: UPGRADES.speed.apply(progression.upgrades.speed),
+        range: UPGRADES.range.apply(progression.upgrades.range),
+        fieldRadius: 400,
+        totalCrops: 50
+    };
+}
+
+const CONSTANTS = {
+    playerSize: 24,
+    energyDecay: 2, // Per second
+    rockDamage: 10
+};
+
+// --- ENTITY TYPES ---
+const TREASURE_TYPES = {
+    CHEST: { type: 'CHEST', color: '#ffca28', sideColor: '#ff6f00', scale: 1, value: 50, hp: 2000 },
+    RUBY: { type: 'GEM', color: '#d50000', sideColor: '#b71c1c', scale: 0.8, value: 150, hp: 4000 }, // Rare
+    ROCK: { type: 'ROCK', color: '#795548', sideColor: '#4e342e', radius: 20, scale: 1 } 
+};
+
+let state = {
+    lastTime: 0,
+    running: false,
+    gameOver: false,
+    energy: 100,
+    player: { x: 0, y: 0 },
+    
+    // NEW COMBAT STATE
+    combat: {
+        cooldownTimer: 0,
+        isSwinging: false,
+        swingTimer: 0,
+        swingDuration: 0.2, // How long the visual swing lasts
+        currentAngle: 0,    // Where the weapon is currently visually
+        aimAngle: 0         // Where we are aiming
+    },
+
+    enemies: [], 
+    particles: [],
+    texts: [],
+    keys: { w: false, a: false, s: false, d: false },
+    mouse: { x: 0, y: 0 }
+};
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    if (!state.running && !state.gameOver) {
+        state.player.x = canvas.width / 2;
+        state.player.y = canvas.height / 2;
+    }
+}
+window.addEventListener('resize', resize);
+resize();
+
+window.addEventListener('keydown', e => { if(state.keys.hasOwnProperty(e.key.toLowerCase())) state.keys[e.key.toLowerCase()] = true; });
+window.addEventListener('keyup', e => { if(state.keys.hasOwnProperty(e.key.toLowerCase())) state.keys[e.key.toLowerCase()] = false; });
+window.addEventListener('mousemove', e => { state.mouse.x = e.clientX; state.mouse.y = e.clientY; });
+
+function angleDifference(a, b) {
+    let diff = b - a;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    return diff;
+}
+
+function pointInSector(px, py, cx, cy, radius, startAngle, endAngle) {
+    // 1. Check distance
+    let dx = px - cx;
+    let dy = py - cy;
+    let distSq = dx*dx + dy*dy;
+    if (distSq > radius*radius) return false;
+
+    // 2. Check Angle
+    let angle = Math.atan2(dy, dx);
+    
+    // Normalize angles to 0-2PI for easier comparison, or use difference
+    let diff = angleDifference(startAngle, angle);
+    
+    // Check if angle is between start and end (which is just checking if difference is positive and less than arc width)
+    // Actually simpler: aimAngle is center. check if angle is within aimAngle +/- arc/2
+    // Let's rely on the caller passing correct angles
+    // Re-implementation: Check if angle is within the "Cone" centered at Aim
+    
+    // But since we are swinging, we just check if the point is touched by the sweep?
+    // For simplicity in this idle-style: Instant Hitbox in the arc area
+    return true; // Use more precise logic in Update
+}
+
+// Re-using simplified sector check for update loop
+function isTargetInCone(tx, ty, cx, cy, radius, aimAngle, arcWidth) {
+    let dx = tx - cx;
+    let dy = ty - cy;
+    let dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist > radius) return false;
+    
+    let angleToTarget = Math.atan2(dy, dx);
+    let diff = Math.abs(angleDifference(aimAngle, angleToTarget));
+    
+    return diff <= (arcWidth / 2);
+}
+
+function renderShop() {
+    const container = document.getElementById('skill-tree-area');
+    const svg = document.getElementById('tree-lines');
+    const existingNodes = document.querySelectorAll('.tree-node');
+    existingNodes.forEach(n => n.remove());
+    svg.innerHTML = ''; 
+
+    document.getElementById('shop-gold').innerText = progression.gold;
+
+    for (let key in UPGRADES) {
+        const u = UPGRADES[key];
+        if (u.req) {
+            const parent = UPGRADES[u.req];
+            const isUnlocked = isNodeUnlocked(key);
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', parent.x + '%');
+            line.setAttribute('y1', parent.y + '%');
+            line.setAttribute('x2', u.x + '%');
+            line.setAttribute('y2', u.y + '%');
+            line.setAttribute('class', `connection-line ${isUnlocked ? 'unlocked' : ''}`);
+            svg.appendChild(line);
+        }
+    }
+
+    for (let key in UPGRADES) {
+        const u = UPGRADES[key];
+        const lvl = progression.upgrades[key];
+        const cost = getUpgradeCost(key);
+        const unlocked = isNodeUnlocked(key);
+        const affordable = unlocked && progression.gold >= cost;
+
+        const node = document.createElement('div');
+        node.className = `tree-node ${unlocked ? 'unlocked' : 'locked'} ${affordable ? 'affordable' : ''}`;
+        node.style.left = u.x + '%';
+        node.style.top = u.y + '%';
+        node.innerText = u.name.charAt(0);
+
+        const badge = document.createElement('div');
+        badge.className = 'node-level';
+        badge.innerText = `Lv ${lvl}`;
+        node.appendChild(badge);
+
+        node.onmouseenter = () => showDetails(key);
+        node.onclick = () => buyUpgrade(key);
+        container.appendChild(node);
+    }
+}
+
+function isNodeUnlocked(key) {
+    const u = UPGRADES[key];
+    if (!u.req) return true;
+    return progression.upgrades[u.req] >= u.reqLvl;
+}
+
+function getUpgradeCost(key) {
+    const u = UPGRADES[key];
+    const level = progression.upgrades[key];
+    return Math.floor(u.baseCost * Math.pow(u.costScale, level - 1));
+}
+
+function showDetails(key) {
+    const u = UPGRADES[key];
+    const lvl = progression.upgrades[key];
+    const cost = getUpgradeCost(key);
+    const unlocked = isNodeUnlocked(key);
+    
+    document.getElementById('node-name').innerText = u.name + ` (Lvl ${lvl})`;
+    document.getElementById('node-desc').innerText = u.desc;
+    
+    if (!unlocked) {
+        const parent = UPGRADES[u.req];
+        document.getElementById('node-cost').innerText = "LOCKED";
+        document.getElementById('node-req').innerText = `REQUIRES: ${parent.name} Lv ${u.reqLvl}`;
+        document.getElementById('node-cost').style.color = '#795548';
+    } else {
+        document.getElementById('node-cost').innerText = cost + " GOLD";
+        document.getElementById('node-req').innerText = "";
+        document.getElementById('node-cost').style.color = progression.gold >= cost ? '#ffd700' : '#ffab91';
+    }
+}
+
+function buyUpgrade(key) {
+    if (!isNodeUnlocked(key)) return;
+    const cost = getUpgradeCost(key);
+    if (progression.gold >= cost) {
+        progression.gold -= cost;
+        progression.upgrades[key]++;
+        renderShop();
+        showDetails(key);
+    }
+}
+
+function resetGame() {
+    document.getElementById('game-over').style.display = 'none';
+    state.running = true;
+    state.gameOver = false;
+    state.energy = 100;
+    state.enemies = [];
+    state.particles = [];
+    state.texts = [];
+    state.player.x = canvas.width / 2;
+    state.player.y = canvas.height / 2;
+    
+    // Reset Combat
+    state.combat.cooldownTimer = 0;
+    state.combat.isSwinging = false;
+    
+    const stats = getStats();
+    spawnBeach(stats.fieldRadius, stats.totalCrops);
+    
+    updateEnergyUI();
+    state.lastTime = performance.now();
+    requestAnimationFrame(gameLoop);
+}
+
+function triggerGameOver() {
+    state.gameOver = true;
+    state.running = false;
+    const ui = document.getElementById('game-over');
+    ui.style.display = 'flex';
+    renderShop();
+}
+
+function spawnBeach(radius, count) {
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    
+    // Spawn Rocks
+    const rockCount = Math.max(5, Math.floor(count * 0.1));
+    for (let i = 0; i < rockCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = 50 + Math.sqrt(Math.random()) * (radius - 50);
+        state.enemies.push({
+            x: cx + Math.cos(angle) * r, 
+            y: cy + Math.sin(angle) * r,
+            type: TREASURE_TYPES.ROCK,
+            lastHit: 0
+        });
+    }
+
+    // Spawn Treasure
+    for(let i=0; i<count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const r = Math.sqrt(Math.random()) * radius;
+        const ex = cx + Math.cos(angle) * r;
+        const ey = cy + Math.sin(angle) * r;
+
+        let type = Math.random() < 0.1 ? TREASURE_TYPES.RUBY : TREASURE_TYPES.CHEST;
+
+        state.enemies.push({
+            x: ex, y: ey,
+            type: type,
+            maxHp: type.hp, hp: type.hp,
+            lastHit: 0, accumulatedDamage: 0, lastDamageTime: 0
+        });
+    }
+}
+
+function update(dt) {
+    if (state.gameOver) return;
+    const stats = getStats();
+    const now = performance.now();
+
+    // Energy / Time Limit
+    state.energy -= CONSTANTS.energyDecay * dt;
+    if (state.energy <= 0) { state.energy = 0; triggerGameOver(); return; }
+
+    // Player Move
+    let dx = 0, dy = 0;
+    if (state.keys.w) dy -= 1; if (state.keys.s) dy += 1;
+    if (state.keys.a) dx -= 1; if (state.keys.d) dx += 1;
+    if (dx !== 0 || dy !== 0) { const len = Math.sqrt(dx*dx+dy*dy); dx/=len; dy/=len; }
+    
+    state.player.x += dx * stats.speed * dt;
+    state.player.y += dy * stats.speed * dt;
+    state.player.x = Math.max(10, Math.min(canvas.width - 10, state.player.x));
+    state.player.y = Math.max(10, Math.min(canvas.height - 10, state.player.y));
+
+    // --- COMBAT LOGIC (AUTO SWING) ---
+    
+    // Aiming
+    const mouseAngle = Math.atan2(state.mouse.y - state.player.y, state.mouse.x - state.player.x);
+    state.combat.aimAngle = mouseAngle; // Always aim at mouse
+
+    if (state.combat.isSwinging) {
+        // Continue Swing Animation
+        state.combat.swingTimer -= dt;
+        if (state.combat.swingTimer <= 0) {
+            state.combat.isSwinging = false;
+            state.combat.cooldownTimer = stats.cooldown;
+        }
+    } else {
+        // Idle / Cooldown
+        state.combat.cooldownTimer -= dt;
+        
+        // AUTO FIRE CHECK
+        if (state.combat.cooldownTimer <= 0) {
+            // TRIGGER SWING
+            state.combat.isSwinging = true;
+            state.combat.swingTimer = state.combat.swingDuration;
+            
+            // --- HIT DETECTION (Instant on swing start for simplicity) ---
+            const swingCenter = state.combat.aimAngle;
+            
+            for (let i = state.enemies.length - 1; i >= 0; i--) {
+                let e = state.enemies[i];
+                
+                // Check if in range and arc
+                if (isTargetInCone(e.x, e.y, state.player.x, state.player.y, stats.range, swingCenter, stats.arc)) {
+                    
+                    if (e.type === TREASURE_TYPES.ROCK) {
+                        // Rock Hit (Clang sound effect in mind)
+                        createParticles(e.x, e.y, '#9e9e9e', 5);
+                        continue;
+                    }
+
+                    // Treasure Hit
+                    e.hp -= stats.damage;
+                    e.accumulatedDamage += stats.damage;
+                    e.lastHit = now;
+
+                    // Show Damage
+                    createFloatingText(e.x, e.y - 20, Math.floor(stats.damage), '#fff');
+                    
+                    if (e.hp <= 0) {
+                        progression.gold += e.type.value;
+                        createFloatingText(e.x, e.y - 40, "+" + e.type.value + "G", '#ffd700');
+                        createParticles(e.x, e.y, e.type.color, 12);
+                        state.enemies.splice(i, 1);
+                    }
+                }
+            }
+        }
+    }
+
+    // Particles & Text
+    for (let i = state.particles.length - 1; i >= 0; i--) {
+        let p = state.particles[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt;
+        if (p.life <= 0) state.particles.splice(i, 1);
+    }
+    for (let i = state.texts.length - 1; i >= 0; i--) {
+        let t = state.texts[i]; t.y += t.vy * dt; t.life -= dt;
+        if (t.life <= 0) state.texts.splice(i, 1);
+    }
+}
+
+function createParticles(x, y, color, count) {
+    for(let i=0; i<count; i++) {
+        const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 100 + 50;
+        state.particles.push({ x: x, y: y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, life: 1.0, color: color });
+    }
+}
+function createFloatingText(x, y, text, color) {
+    state.texts.push({ x: x, y: y, text: text, life: 0.8, vy: -50, color: color || '#ffff00' });
+}
+
+function updateEnergyUI() {
+    const fill = document.getElementById('energy-fill');
+    fill.style.transform = `scaleX(${state.energy / 100})`;
+    document.getElementById('score-display').innerText = progression.gold;
+}
+
+// --- DRAWING ---
+
+function draw3DRect(x, y, w, h, height, color, sideColor) {
+    ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(x + 5, y + 5, w, h); // Shadow
+    ctx.fillStyle = sideColor; ctx.fillRect(x, y + height, w, h);
+    ctx.fillStyle = color; ctx.fillRect(x, y, w, h);
+}
+
+function draw3DCircle(x, y, r, height, color, sideColor) {
+    ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.arc(x + 5, y + 5, r, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = sideColor;
+    for(let i=1; i<=height; i+=2) { ctx.beginPath(); ctx.arc(x, y + i, r, 0, Math.PI*2); ctx.fill(); }
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+}
+
+function draw() {
+    ctx.fillStyle = '#e0cda7'; // Sand
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const stats = getStats();
+    const cx = canvas.width/2;
+    const cy = canvas.height/2;
+
+    // Draw Beach (Circle)
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.beginPath(); ctx.arc(0, 5, stats.fieldRadius, 0, Math.PI*2); ctx.fillStyle = '#d7ccc8'; ctx.fill(); // Depth
+    ctx.beginPath(); ctx.arc(0, 0, stats.fieldRadius, 0, Math.PI*2); ctx.fillStyle = '#e0cda7'; ctx.fill(); // Top
+    ctx.strokeStyle = '#4fa4b8'; ctx.lineWidth = 10; ctx.stroke(); // Water border
+    ctx.restore();
+
+    // Render Sorted Entities
+    let renderList = [];
+    
+    // Player
+    renderList.push({
+        y: state.player.y,
+        draw: () => {
+            ctx.save(); ctx.translate(state.player.x, state.player.y);
+            
+            // Draw Aim Cone (Visual Guide)
+            ctx.globalAlpha = 0.2;
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.moveTo(0,0);
+            ctx.arc(0, 0, stats.range, state.combat.aimAngle - stats.arc/2, state.combat.aimAngle + stats.arc/2);
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+
+            // Draw Weapon - ONLY WHEN SWINGING
+            if (state.combat.isSwinging) {
+                ctx.save();
+                let swordAngle = state.combat.aimAngle;
+                
+                // Animate Swing
+                // Progress 0 to 1
+                const p = 1 - (state.combat.swingTimer / state.combat.swingDuration); 
+                // Sweep from -arc/2 to +arc/2
+                const start = -stats.arc / 2;
+                const end = stats.arc / 2;
+                const offset = start + (end - start) * p;
+                swordAngle += offset;
+
+                ctx.rotate(swordAngle);
+                
+                // Sword Blade (Silver Cutlass)
+                ctx.fillStyle = '#cfd8dc';
+                ctx.shadowBlur = 10; ctx.shadowColor = '#fff';
+                ctx.beginPath();
+                ctx.moveTo(10, -2);
+                ctx.lineTo(stats.range, -5); // Tip curve
+                ctx.lineTo(stats.range - 10, 5);
+                ctx.lineTo(10, 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                
+                // Handle
+                ctx.fillStyle = '#3e2723';
+                ctx.fillRect(0, -3, 10, 6);
+                
+                ctx.restore();
+            }
+
+            // Player Body
+            draw3DRect(-12, -22, 24, 24, 10, '#d32f2f', '#b71c1c'); // Red Coat
+            
+            // Pirate Hat
+            ctx.fillStyle = '#212121';
+            ctx.beginPath();
+            ctx.moveTo(-18, -15); ctx.lineTo(18, -15); ctx.lineTo(0, -35);
+            ctx.fill();
+            // Skull Icon
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(0, -22, 3, 0, Math.PI*2); ctx.fill();
+
+            ctx.restore();
+        }
+    });
+
+    for(let e of state.enemies) {
+        renderList.push({
+            y: e.y,
+            draw: () => {
+                ctx.save(); ctx.translate(e.x, e.y);
+                const isHit = (performance.now() - e.lastHit) < 100;
+                
+                if (e.type === TREASURE_TYPES.ROCK) {
+                    draw3DCircle(0, -10, e.type.radius, 8, isHit ? '#fff' : e.type.color, e.type.sideColor);
+                } else {
+                    // Chest / Gem
+                    const c = isHit ? '#fff' : e.type.color;
+                    
+                    if (e.type === TREASURE_TYPES.RUBY) {
+                        // Diamond shape
+                        ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 5, 8, 4, 0, 0, Math.PI*2); ctx.fill();
+                        ctx.fillStyle = e.type.sideColor;
+                        ctx.beginPath(); ctx.moveTo(0, -25); ctx.lineTo(10, -15); ctx.lineTo(0, 0); ctx.lineTo(-10, -15); ctx.fill();
+                        ctx.fillStyle = c;
+                        ctx.beginPath(); ctx.moveTo(0, -25); ctx.lineTo(10, -15); ctx.lineTo(0, -10); ctx.lineTo(-10, -15); ctx.fill();
+                    } else {
+                        // Chest Box
+                        draw3DRect(-12, -25, 24, 20, 8, c, e.type.sideColor);
+                        // Gold banding
+                        ctx.fillStyle = '#ffecb3';
+                        ctx.fillRect(-12, -20, 24, 4);
+                    }
+                    
+                    // HP Bar
+                    if (e.hp < e.maxHp) {
+                        const hpPct = e.hp / e.maxHp;
+                        ctx.fillStyle = '#000'; ctx.fillRect(-12, -40, 24, 4);
+                        ctx.fillStyle = '#0f0'; ctx.fillRect(-12, -40, 24*hpPct, 4);
+                    }
+                }
+                ctx.restore();
+            }
+        });
+    }
+
+    renderList.sort((a, b) => a.y - b.y);
+    renderList.forEach(item => item.draw());
+
+    for (let p of state.particles) {
+        ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+        ctx.fillRect(p.x, p.y, 4, 4);
+    }
+    ctx.globalAlpha = 1.0;
+    
+    ctx.textAlign = 'center'; ctx.font = 'bold 20px "Courier New", monospace';
+    for (let t of state.texts) {
+        ctx.fillStyle = t.color; ctx.shadowColor="#000"; ctx.shadowBlur=2; 
+        ctx.globalAlpha = t.life; ctx.fillText(t.text, t.x, t.y);
+    }
+    ctx.globalAlpha = 1.0;
+    ctx.shadowBlur = 0;
+
+    // Overlay (Night Coming)
+    if (state.energy < 100) {
+        const darkness = 1 - (state.energy / 100); 
+        ctx.fillStyle = `rgba(10, 10, 40, ${darkness * 0.5})`;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    updateEnergyUI();
+}
+
+function gameLoop(timestamp) {
+    if (!state.lastTime) state.lastTime = timestamp;
+    const dt = (timestamp - state.lastTime) / 1000;
+    state.lastTime = timestamp;
+    if (state.running) { update(dt); draw(); }
+    requestAnimationFrame(gameLoop);
+}
+
+resetGame();
+</script>
+</body>
+</html>

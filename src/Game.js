@@ -1,0 +1,241 @@
+import Player from './Entities/Player.js';
+import UI from './UI.js';
+import { SkillTree } from './SkillTree.js';
+import Chest from './Entities/Chest.js';
+import Rock from './Entities/Rock.js';
+import Crab from './Entities/Crab.js';
+
+export default class Game {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+
+        // Resize canvas to full window
+        this.resize();
+        window.addEventListener('resize', () => this.resize());
+
+        this.input = {
+            keys: {},
+            mouse: { x: 0, y: 0 },
+            rockHitCooldown: false
+        };
+        this.setupInput();
+
+        this.state = 'START'; // START, PLAYING, SHOP, GAMEOVER
+        this.lastTime = 0;
+
+        this.player = null;
+        this.entities = [];
+        this.particles = [];
+        this.texts = [];
+        this.gold = 0; // Persistent Gold
+        this.energy = 100;
+        this.maxEnergy = 100;
+        this.shake = 0;
+
+        // Persistent Upgrades
+        this.stats = {
+            speed: 250,
+            damage: 50,
+            swingCooldown: 1.0,
+            range: 80, // Larger default range
+            arc: 0
+        };
+
+        // Configuration
+        this.energyDecayRate = 8.0;
+
+        this.ui = new UI(this);
+        this.skillTree = new SkillTree(this);
+
+        this.assets = {
+            player: new Image(),
+            chest: new Image(),
+            rock: new Image(),
+            crab: new Image(),
+            sand: new Image()
+        };
+        this.assetsLoaded = 0;
+        this.totalAssets = 5;
+        this.bgPattern = null;
+
+        this.loadAssets();
+    }
+
+    loadAssets() {
+        // Helper to load and process
+        const load = (name, src) => {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => {
+                if (name === 'sand') {
+                    // Sand doesn't need transparency
+                    this.assets[name] = img;
+                    this.assetsLoaded++;
+                    if (this.assetsLoaded === this.totalAssets) console.log("All assets loaded");
+                } else {
+                    // Apply transparency filter
+                    import('./RenderUtils.js').then(({ createTransparentSprite }) => {
+                        this.assets[name] = createTransparentSprite(img);
+                        this.assetsLoaded++;
+                        if (this.assetsLoaded === this.totalAssets) {
+                            console.log("All assets loaded & processed");
+                        }
+                    });
+                }
+            };
+        };
+
+        load('player', './sprites/player.png');
+        load('chest', './sprites/chest.png');
+        load('rock', './sprites/rock.png');
+        load('crab', './sprites/crab.png');
+        load('sand', './sprites/sand.png');
+    }
+
+    resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+    }
+
+    setupInput() {
+        window.addEventListener('keydown', e => this.input.keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', e => this.input.keys[e.key.toLowerCase()] = false);
+        window.addEventListener('mousemove', e => {
+            const rect = this.canvas.getBoundingClientRect();
+            this.input.mouse.x = e.clientX - rect.left;
+            this.input.mouse.y = e.clientY - rect.top;
+        });
+
+        const startLogic = () => this.startGame();
+
+        const startBtn = document.getElementById('start-game-btn');
+        if (startBtn) startBtn.addEventListener('click', startLogic);
+
+        const nextRunBtn = document.getElementById('next-run-btn');
+        if (nextRunBtn) nextRunBtn.addEventListener('click', startLogic);
+    }
+
+    startGame() {
+        console.log("Starting Game...");
+        this.state = 'PLAYING';
+        this.energy = this.maxEnergy;
+        this.player = new Player(this);
+        this.entities = [];
+        this.particles = [];
+        this.texts = []; // Reset texts too
+        this.shake = 0;
+
+        // Static Spawning - Immediate
+        // Chests
+        for (let i = 0; i < 15; i++) {
+            const x = Math.random() * (this.canvas.width - 100) + 50;
+            const y = Math.random() * (this.canvas.height - 100) + 50;
+            this.entities.push(new Chest(this, x, y));
+        }
+        // Rocks
+        for (let i = 0; i < 8; i++) {
+            const x = Math.random() * (this.canvas.width - 100) + 50;
+            const y = Math.random() * (this.canvas.height - 100) + 50;
+            this.entities.push(new Rock(this, x, y));
+        }
+        // Crabs
+        for (let i = 0; i < 5; i++) {
+            const x = Math.random() * (this.canvas.width - 100) + 50;
+            const y = Math.random() * (this.canvas.height - 100) + 50;
+            this.entities.push(new Crab(this, x, y));
+        }
+
+        console.log(`Spawned ${this.entities.length} entities.`);
+        this.ui.showHUD();
+    }
+
+    start() {
+        requestAnimationFrame(t => this.loop(t));
+    }
+
+    loop(timestamp) {
+        const dt = (timestamp - this.lastTime) / 1000;
+        this.lastTime = timestamp;
+
+        this.update(dt);
+        this.draw();
+
+        requestAnimationFrame(t => this.loop(t));
+    }
+
+    update(dt) {
+        if (this.state === 'PLAYING') {
+            // Energy Decay
+            this.energy -= this.energyDecayRate * dt;
+            if (this.energy <= 0) {
+                this.energy = 0;
+                this.state = 'SHOP';
+                this.gameOver();
+            }
+
+            // Screen Shake Decay
+            if (this.shake > 0) {
+                this.shake -= dt * 30;
+                if (this.shake < 0) this.shake = 0;
+            }
+
+            if (this.player) this.player.update(dt);
+
+            // Update entities
+            this.entities.forEach(ent => ent.update(dt));
+            this.particles.forEach(p => p.update(dt));
+            this.texts.forEach(t => t.update(dt));
+
+            // Cleanup dead
+            this.entities = this.entities.filter(e => !e.markedForDeletion);
+            this.particles = this.particles.filter(p => !p.markedForDeletion);
+            this.texts = this.texts.filter(t => !t.markedForDeletion);
+        }
+    }
+
+    gameOver() {
+        console.log("Game Over - Opening Shop");
+        this.ui.showShop();
+        this.skillTree.init();
+    }
+
+    draw() {
+        this.ctx.save();
+
+        // Apply Shake
+        if (this.shake > 0) {
+            const dx = (Math.random() - 0.5) * this.shake;
+            const dy = (Math.random() - 0.5) * this.shake;
+            this.ctx.translate(dx, dy);
+        }
+
+        // Draw Background
+        if (this.assets.sand && this.assets.sand.complete && this.assets.sand.naturalWidth !== 0) {
+            if (!this.bgPattern) {
+                this.bgPattern = this.ctx.createPattern(this.assets.sand, 'repeat');
+            }
+            this.ctx.fillStyle = this.bgPattern;
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        } else {
+            this.ctx.fillStyle = '#e0cda7'; // Fallback Sand
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        if (this.state === 'PLAYING') {
+            // Sort by Y for depth
+            const allRenderables = [...this.entities];
+            if (this.player) allRenderables.push(this.player);
+
+            allRenderables.sort((a, b) => a.y - b.y);
+
+            allRenderables.forEach(r => r.draw(this.ctx));
+            this.particles.forEach(p => p.draw(this.ctx));
+            this.texts.forEach(t => t.draw(this.ctx));
+        }
+
+        this.ctx.restore();
+
+        this.ui.update();
+    }
+}

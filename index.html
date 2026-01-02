@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pirate Scavenger Professional</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="app">
+    <div id="ui-layer">
+      <div id="hud" class="hidden">
+        <div class="hud-top-left">
+          <div class="gold-container">
+            <span class="icon">🪙</span>
+            <span id="gold-display">0</span>
+          </div>
+        </div>
+        <div class="hud-top-center">
+          <div class="energy-bar-container">
+            <div class="energy-label">SUNLIGHT</div>
+            <div class="energy-bar-bg">
+              <div id="energy-bar-fill"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="shop-overlay" class="hidden">
+        <h1>The Night Market</h1>
+        <div id="shop-gold">Gold: <span id="shop-gold-amount">0</span></div>
+        <div id="shop-items"></div>
+        <button id="next-run-btn">Setting Sail (Start Run)</button>
+      </div>
+
+      <div id="start-screen">
+        <h1>Pirate Scavenger</h1>
+        <p>Collect treasure before the sun sets!</p>
+        <button id="start-game-btn">Start Adventure</button>
+      </div>
+    </div>
+    <canvas id="game-canvas"></canvas>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
