@@ -1,4 +1,6 @@
 import Player from './Entities/Player.js';
+import Pet from './Entities/Pet.js';
+import CannonBall from './Entities/CannonBall.js';
 import UI from './UI.js';
 import { SkillTree } from './SkillTree.js';
 import Chest from './Entities/Chest.js';
@@ -58,7 +60,7 @@ export default class Game {
             sand: new Image()
         };
         this.assetsLoaded = 0;
-        this.totalAssets = 5;
+        this.totalAssets = 8;
         this.bgPattern = null;
 
         this.loadAssets();
@@ -93,6 +95,9 @@ export default class Game {
         load('rock', './sprites/rock.png');
         load('crab', './sprites/crab.png');
         load('sand', './sprites/sand.png');
+        load('cannonball', './sprites/cannonball.png');
+        load('carrot', './sprites/carrot.png');
+        load('parrot', './sprites/parrot.png');
     }
 
     resize() {
