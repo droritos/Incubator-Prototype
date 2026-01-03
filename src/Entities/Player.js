@@ -135,6 +135,17 @@ export default class Player {
                             ent.invulnerable = true;
                             setTimeout(() => ent.invulnerable = false, 250); // 0.25s i-frame
                         }
+                    } else if (ent.type === 'Pirate') {
+                        if (ent.hp > 0 && !ent.invulnerable) {
+                            const dmg = this.game.stats.damage;
+                            ent.takeDamage(dmg);
+                            import('./FloatingText.js').then(({ FloatingText }) => {
+                                this.game.texts.push(new FloatingText(dmg, ent.x, ent.y - 40, '#ff0000', 20));
+                            });
+
+                            ent.invulnerable = true;
+                            setTimeout(() => ent.invulnerable = false, 250);
+                        }
                     }
                 }
             }
