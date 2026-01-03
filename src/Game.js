@@ -62,6 +62,7 @@ export default class Game {
         this.assetsLoaded = 0;
         this.totalAssets = 8;
         this.bgPattern = null;
+        this.cannonTimer = 0;
 
         this.loadAssets();
     }
