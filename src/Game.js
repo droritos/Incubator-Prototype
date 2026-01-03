@@ -1,6 +1,7 @@
 import Player from './Entities/Player.js';
 import Pet from './Entities/Pet.js';
 import CannonBall from './Entities/CannonBall.js';
+import Pirate from './Entities/Pirate.js';
 import UI from './UI.js';
 import { SkillTree } from './SkillTree.js';
 import Chest from './Entities/Chest.js';
@@ -60,7 +61,7 @@ export default class Game {
             sand: new Image()
         };
         this.assetsLoaded = 0;
-        this.totalAssets = 8;
+        this.totalAssets = 9;
         this.bgPattern = null;
         this.cannonTimer = 0;
 
@@ -99,6 +100,7 @@ export default class Game {
         load('cannonball', './sprites/cannonball.png');
         load('carrot', './sprites/carrot.png');
         load('parrot', './sprites/parrot.png');
+        load('pirate', './sprites/pirate.png');
     }
 
     resize() {
@@ -161,6 +163,8 @@ export default class Game {
         for (let i = 0; i < 15; i++) this.spawnEntity('rock');
         // Crabs
         for (let i = 0; i < 10; i++) this.spawnEntity('crab');
+        // Pirates (Few)
+        for (let i = 0; i < 5; i++) this.spawnEntity('pirate');
 
         console.log(`Spawned ${this.entities.length} entities.`);
         this.ui.showHUD();
@@ -220,8 +224,10 @@ export default class Game {
 
             // Respawn Logic
             if (this.entities.length < 20) {
-                if (Math.random() > 0.5) this.spawnEntity('chest');
-                else this.spawnEntity('crab');
+                const r = Math.random();
+                if (r < 0.3) this.spawnEntity('chest');
+                else if (r < 0.7) this.spawnEntity('crab');
+                else this.spawnEntity('pirate');
             }
         }
     }
@@ -277,6 +283,7 @@ export default class Game {
         if (type === 'chest') this.entities.push(new Chest(this, x, y));
         if (type === 'rock') this.entities.push(new Rock(this, x, y));
         if (type === 'crab') this.entities.push(new Crab(this, x, y));
+        if (type === 'pirate') this.entities.push(new Pirate(this, x, y));
     }
 
     fireCannons() {
