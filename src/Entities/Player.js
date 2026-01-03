@@ -29,7 +29,7 @@ export default class Player {
         const mdY = this.game.input.mouse.y - this.y;
         this.swordAngle = Math.atan2(mdY, mdX);
 
-        // Movement
+        // Movement 
         let dx = 0;
         let dy = 0;
 
@@ -53,7 +53,7 @@ export default class Player {
         this.x = Math.max(0, Math.min(this.game.canvas.width, this.x));
         this.y = Math.max(0, Math.min(this.game.canvas.height, this.y));
 
-        this.swingCooldown = Math.max(0.01, this.game.stats.swingCooldown); // Cap minimum cooldown
+        this.swingCooldown = Math.max(0.05, this.game.stats.swingCooldown); // Cap minimum cooldown
 
         if (!this.isSwinging) {
             this.swingTimer += dt;
