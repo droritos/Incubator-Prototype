@@ -40,7 +40,7 @@ export default class Game {
         this.stats = {
             speed: 250,
             damage: 50,
-            swingCooldown: 0.4,
+            swingCooldown: 0.01,
             range: 80,
             arc: 0,
             cannonLevel: 0, // New Stat
