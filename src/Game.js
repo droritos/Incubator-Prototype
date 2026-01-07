@@ -64,8 +64,13 @@ export default class Game {
         this.totalAssets = 9;
         this.bgPattern = null;
         this.cannonTimer = 0;
+        this.hitStopDuration = 0;
 
         this.loadAssets();
+    }
+
+    hitStop(duration) {
+        this.hitStopDuration = duration;
     }
 
     loadAssets() {
@@ -185,6 +190,12 @@ export default class Game {
     }
 
     update(dt) {
+        // Hit Stop Logic
+        if (this.hitStopDuration > 0) {
+            this.hitStopDuration -= dt;
+            return; // Freeze!
+        }
+
         if (this.state === 'PLAYING') {
             // Energy Decay
             this.energy -= this.energyDecayRate * dt;

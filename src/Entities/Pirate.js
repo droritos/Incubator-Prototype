@@ -70,13 +70,21 @@ export default class Pirate {
         if (dist < 40) {
             this.game.energy -= 35 * dt; // High damage
         }
+
+        // Recovery
+        if (this.flashTimer > 0) this.flashTimer -= dt;
+        if (this.scaleY < 1.0) {
+            this.scaleY += dt * 5;
+            if (this.scaleY > 1.0) this.scaleY = 1.0;
+        }
     }
 
     draw(ctx) {
         // Face player if chasing, else direction
         let facing = this.dirX;
+        const flash = this.flashTimer > 0 ? '#ff0000' : null;
 
-        drawSprite(ctx, this.game.assets.pirate, this.x, this.y, this.width, this.height, 0, facing);
+        drawSprite(ctx, this.game.assets.pirate, this.x, this.y, this.width, this.height, 0, facing, this.scaleY, 1, flash);
         drawHealthBar(ctx, this.x, this.y, this.width, this.hp, this.maxHp);
     }
 }

@@ -19,12 +19,28 @@ export default class Crab {
 
         this.changeDirTimer = 0;
         this.invulnerable = false; // Prevent multi-hits
+
+        this.flashTimer = 0;
+        this.scaleY = 1.0;
     }
 
     takeDamage(amount) {
         this.hp -= amount;
+
+        this.flashTimer = 0.1;
+        this.scaleY = 0.8;
+        this.game.hitStop(0.05);
+        this.game.shake = 5;
+
+        import('../Entities/Particle.js').then(({ spawnParticles }) => {
+            spawnParticles(this.game, this.x, this.y, '#ff0000', 5, 'splinter');
+        });
+
         if (this.hp <= 0) {
             this.markedForDeletion = true;
+            import('../Entities/Particle.js').then(({ spawnParticles }) => {
+                spawnParticles(this.game, this.x, this.y, '#ff0000', 15, 'burst');
+            });
         }
     }
 
@@ -52,12 +68,19 @@ export default class Crab {
         if (dist < 30) {
             this.game.energy -= 20 * dt;
         }
+
+        // Recovery
+        if (this.flashTimer > 0) this.flashTimer -= dt;
+        if (this.scaleY < 1.0) {
+            this.scaleY += dt * 5;
+            if (this.scaleY > 1.0) this.scaleY = 1.0;
+        }
     }
 
     draw(ctx) {
-        // Rotate to face direction
+        const flash = this.flashTimer > 0 ? '#ff0000' : null;
         const angle = Math.atan2(this.dirY, this.dirX) - Math.PI / 2;
-        drawSprite(ctx, this.game.assets.crab, this.x, this.y, this.width, this.height, angle);
+        drawSprite(ctx, this.game.assets.crab, this.x, this.y, this.width, this.height, angle, 1, this.scaleY, 1, flash);
         drawHealthBar(ctx, this.x, this.y, this.width, this.hp, this.maxHp);
     }
 }

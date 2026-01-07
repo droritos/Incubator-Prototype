@@ -23,19 +23,24 @@ export function drawBlockyRect(ctx, x, y, w, h, color) {
     ctx.fillRect(x - w / 2, y - h, w, h);
 }
 
-export function drawSprite(ctx, image, x, y, width, height, angle = 0, scaleX = 1, opacity = 1) {
+export function drawSprite(ctx, image, x, y, width, height, angle = 0, scaleX = 1, scaleY = 1, opacity = 1, flashColor = null) {
     if (!image) return;
 
     ctx.save();
     ctx.globalAlpha = opacity;
     ctx.translate(x, y);
     ctx.rotate(angle);
-    ctx.scale(scaleX, 1); // Allow flipping
+    ctx.scale(scaleX, scaleY); // Allow Squash (Y) and Flip (X)
 
     // Draw centered
-    // We assume the sprite is roughly centered in the image.
-    // If we want a specific size, we drawImage with width/height
     ctx.drawImage(image, -width / 2, -height / 2, width, height);
+
+    // Flash Effect
+    if (flashColor) {
+        ctx.globalCompositeOperation = 'source-atop';
+        ctx.fillStyle = flashColor;
+        ctx.fillRect(-width / 2, -height / 2, width, height);
+    }
 
     ctx.restore();
 }
