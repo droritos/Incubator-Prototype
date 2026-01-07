@@ -24,32 +24,55 @@ export default class Player {
     }
 
     update(dt) {
-        // Aim Logic
-        const mdX = this.game.input.mouse.x - this.x;
-        const mdY = this.game.input.mouse.y - this.y;
-        this.swordAngle = Math.atan2(mdY, mdX);
+        // Auto-Aim Logic
+        let nearestDist = 9999;
+        let target = null;
 
-        // Movement 
-        let dx = 0;
-        let dy = 0;
+        this.game.entities.forEach(ent => {
+            if (ent.hp > 0 && !ent.markedForDeletion) {
+                const ex = ent.x - this.x;
+                const ey = ent.y - this.y;
+                const d = Math.sqrt(ex * ex + ey * ey);
+                if (d < nearestDist && d < 400) { // 400px view range
+                    nearestDist = d;
+                    target = ent;
+                }
+            }
+        });
 
-        if (this.game.input.keys['w']) dy -= 1;
-        if (this.game.input.keys['s']) dy += 1;
-        if (this.game.input.keys['a']) dx -= 1;
-        if (this.game.input.keys['d']) dx += 1;
-
-        if (dx !== 0 || dy !== 0) {
-            const len = Math.sqrt(dx * dx + dy * dy);
-            dx /= len;
-            dy /= len;
-
-            // Update Facing Direction based on movement
-            if (dx > 0) this.facingX = 1;
-            if (dx < 0) this.facingX = -1;
+        if (target) {
+            const tx = target.x - this.x;
+            const ty = target.y - this.y;
+            this.swordAngle = Math.atan2(ty, tx);
+        } else if (dist > 10) {
+            // If moving and no target, face movement
+            this.swordAngle = Math.atan2(dy, dx);
         }
 
-        this.x += dx * this.speed * dt;
-        this.y += dy * this.speed * dt;
+        // Mouse Movement
+        const mouseX = this.game.input.mouse.x;
+        const mouseY = this.game.input.mouse.y;
+
+        const dx = mouseX - this.x;
+        const dy = mouseY - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        let moveX = 0;
+        let moveY = 0;
+
+        // Move if far enough (prevent jitter)
+        if (dist > 10) {
+            moveX = (dx / dist);
+            moveY = (dy / dist);
+
+            // Update Facing Direction
+            if (moveX > 0) this.facingX = 1;
+            if (moveX < 0) this.facingX = -1;
+
+            this.x += moveX * this.speed * dt;
+            this.y += moveY * this.speed * dt;
+        }
+
         this.x = Math.max(0, Math.min(this.game.canvas.width, this.x));
         this.y = Math.max(0, Math.min(this.game.canvas.height, this.y));
 
