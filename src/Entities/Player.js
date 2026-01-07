@@ -24,7 +24,15 @@ export default class Player {
     }
 
     update(dt) {
-        // Auto-Aim Logic
+        // 1. Calculate Mouse/Movement Data FIRST
+        const mouseX = this.game.input.mouse.x;
+        const mouseY = this.game.input.mouse.y;
+
+        const dx = mouseX - this.x;
+        const dy = mouseY - this.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // 2. Auto-Aim Logic
         let nearestDist = 9999;
         let target = null;
 
@@ -50,7 +58,7 @@ export default class Player {
             while (diff > Math.PI) diff -= Math.PI * 2;
             while (diff < -Math.PI) diff += Math.PI * 2;
 
-            this.swordAngle += diff * 10 * dt; // Speed of 10
+            this.swordAngle += diff * 10 * dt;
         } else if (dist > 10) {
             // If moving and no target, face movement
             const targetAngle = Math.atan2(dy, dx);
@@ -62,13 +70,7 @@ export default class Player {
             this.swordAngle += diff * 10 * dt;
         }
 
-        // Mouse Movement
-        const mouseX = this.game.input.mouse.x;
-        const mouseY = this.game.input.mouse.y;
 
-        const dx = mouseX - this.x;
-        const dy = mouseY - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
 
         let moveX = 0;
         let moveY = 0;

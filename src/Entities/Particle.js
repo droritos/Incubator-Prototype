@@ -40,12 +40,17 @@ export class Particle {
         ctx.globalAlpha = this.life;
         ctx.fillStyle = this.color;
 
-        if (this.type === 'coin') {
+        if (this.type === 'coin' || this.type === 'spark' || this.type === 'burst') {
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
         } else {
-            ctx.fillRect(this.x, this.y, this.size, this.size);
+            // Splinters can be rects, maybe rotate them?
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.game.lastTime * 0.01); // Spin
+            ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+            ctx.restore();
         }
 
         ctx.restore();
