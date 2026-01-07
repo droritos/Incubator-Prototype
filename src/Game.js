@@ -190,13 +190,13 @@ export default class Game {
     }
 
     update(dt) {
-        // Hit Stop Logic
-        if (this.hitStopDuration > 0) {
-            this.hitStopDuration -= dt;
-            return; // Freeze!
-        }
-
         if (this.state === 'PLAYING') {
+            // Hit Stop Logic
+            if (this.hitStopDuration > 0) {
+                this.hitStopDuration -= dt;
+                return; // Freeze!
+            }
+
             // Energy Decay
             this.energy -= this.energyDecayRate * dt;
             if (this.energy <= 0) {

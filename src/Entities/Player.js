@@ -43,10 +43,23 @@ export default class Player {
         if (target) {
             const tx = target.x - this.x;
             const ty = target.y - this.y;
-            this.swordAngle = Math.atan2(ty, tx);
+            const targetAngle = Math.atan2(ty, tx);
+
+            // Smooth Rotation (Lerp)
+            let diff = targetAngle - this.swordAngle;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+
+            this.swordAngle += diff * 10 * dt; // Speed of 10
         } else if (dist > 10) {
             // If moving and no target, face movement
-            this.swordAngle = Math.atan2(dy, dx);
+            const targetAngle = Math.atan2(dy, dx);
+
+            let diff = targetAngle - this.swordAngle;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            while (diff < -Math.PI) diff += Math.PI * 2;
+
+            this.swordAngle += diff * 10 * dt;
         }
 
         // Mouse Movement
