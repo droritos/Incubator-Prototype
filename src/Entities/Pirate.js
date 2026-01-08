@@ -68,7 +68,7 @@ export default class Pirate {
 
         // Collision with player
         if (dist < 40) {
-            this.game.energy -= 35 * dt; // High damage
+            this.game.energy -= 15 * dt; // Reduced damage (was 35).
         }
 
         // Recovery
