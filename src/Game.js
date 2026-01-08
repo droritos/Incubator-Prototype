@@ -33,7 +33,7 @@ export default class Game {
         this.texts = [];
         this.gold = 0; // Persistent Gold
         this.energy = 100;
-        this.maxEnergy = 999;
+        this.maxEnergy = 100;
         this.shake = 0;
 
         // Persistent Upgrades
@@ -48,7 +48,7 @@ export default class Game {
         };
 
         // Configuration
-        this.energyDecayRate = 8.0;
+        this.energyDecayRate = 1.0;
 
         this.ui = new UI(this);
         this.skillTree = new SkillTree(this);
