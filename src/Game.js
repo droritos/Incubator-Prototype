@@ -7,6 +7,7 @@ import { SkillTree } from './SkillTree.js';
 import Chest from './Entities/Chest.js';
 import Rock from './Entities/Rock.js';
 import Crab from './Entities/Crab.js';
+import { FloatingText } from './Entities/FloatingText.js';
 
 export default class Game {
     constructor(canvas) {
