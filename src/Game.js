@@ -134,17 +134,24 @@ export default class Game {
             this.input.mouse.y = e.clientY - rect.top;
         });
 
-        const startLogic = () => this.startGame();
+        const startMouse = () => this.startGame('MOUSE');
+        const startWasd = () => this.startGame('WASD');
 
-        const startBtn = document.getElementById('start-game-btn');
-        if (startBtn) startBtn.addEventListener('click', startLogic);
+        const btnMouse = document.getElementById('start-game-btn-mouse');
+        if (btnMouse) btnMouse.addEventListener('click', startMouse);
+
+        const btnWasd = document.getElementById('start-game-btn-wasd');
+        if (btnWasd) btnWasd.addEventListener('click', startWasd);
 
         const nextRunBtn = document.getElementById('next-run-btn');
-        if (nextRunBtn) nextRunBtn.addEventListener('click', startLogic);
+        if (nextRunBtn) nextRunBtn.addEventListener('click', startMouse); // Default to Mouse for next run? Or keep last?
+        // Let's default next run to 'MOUSE' for now, or we could track last mode.
+        // For simplicity: MOUSE.
     }
 
-    startGame() {
-        console.log("Starting Game...");
+    startGame(mode = 'MOUSE') {
+        console.log("Starting Game... Mode:", mode);
+        this.controlMode = mode;
         this.state = 'PLAYING';
         this.energy = this.maxEnergy;
         this.player = new Player(this);

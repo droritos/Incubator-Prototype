@@ -24,68 +24,93 @@ export default class Player {
     }
 
     update(dt) {
-        // 1. Calculate Mouse/Movement Data FIRST
-        const mouseX = this.game.input.mouse.x;
-        const mouseY = this.game.input.mouse.y;
+        if (this.game.controlMode === 'WASD') {
+            // WASD Movement
+            let moveX = 0;
+            let moveY = 0;
+            if (this.game.input.keys['w']) moveY -= 1;
+            if (this.game.input.keys['s']) moveY += 1;
+            if (this.game.input.keys['a']) moveX -= 1;
+            if (this.game.input.keys['d']) moveX += 1;
 
-        const dx = mouseX - this.x;
-        const dy = mouseY - this.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
+            if (moveX !== 0 || moveY !== 0) {
+                const len = Math.sqrt(moveX * moveX + moveY * moveY);
+                moveX /= len;
+                moveY /= len;
 
-        // 2. Auto-Aim Logic
-        let nearestDist = 9999;
-        let target = null;
-
-        this.game.entities.forEach(ent => {
-            if (ent.hp > 0 && !ent.markedForDeletion) {
-                const ex = ent.x - this.x;
-                const ey = ent.y - this.y;
-                const d = Math.sqrt(ex * ex + ey * ey);
-                if (d < nearestDist && d < 400) { // 400px view range
-                    nearestDist = d;
-                    target = ent;
-                }
+                if (moveX > 0) this.facingX = 1;
+                if (moveX < 0) this.facingX = -1;
             }
-        });
-
-        if (target) {
-            const tx = target.x - this.x;
-            const ty = target.y - this.y;
-            const targetAngle = Math.atan2(ty, tx);
-
-            // Smooth Rotation (Lerp)
-            let diff = targetAngle - this.swordAngle;
-            while (diff > Math.PI) diff -= Math.PI * 2;
-            while (diff < -Math.PI) diff += Math.PI * 2;
-
-            this.swordAngle += diff * 10 * dt;
-        } else if (dist > 10) {
-            // If moving and no target, face movement
-            const targetAngle = Math.atan2(dy, dx);
-
-            let diff = targetAngle - this.swordAngle;
-            while (diff > Math.PI) diff -= Math.PI * 2;
-            while (diff < -Math.PI) diff += Math.PI * 2;
-
-            this.swordAngle += diff * 10 * dt;
-        }
-
-
-
-        let moveX = 0;
-        let moveY = 0;
-
-        // Move if far enough (prevent jitter)
-        if (dist > 10) {
-            moveX = (dx / dist);
-            moveY = (dy / dist);
-
-            // Update Facing Direction
-            if (moveX > 0) this.facingX = 1;
-            if (moveX < 0) this.facingX = -1;
 
             this.x += moveX * this.speed * dt;
             this.y += moveY * this.speed * dt;
+
+            // Mouse Aim
+            const mouseX = this.game.input.mouse.x;
+            const mouseY = this.game.input.mouse.y;
+            this.swordAngle = Math.atan2(mouseY - this.y, mouseX - this.x);
+
+        } else {
+            // MOUSE Movement & Auto-Aim (Existing Logic)
+
+            // 1. Calculate Mouse/Movement Data
+            const mouseX = this.game.input.mouse.x;
+            const mouseY = this.game.input.mouse.y;
+
+            const dx = mouseX - this.x;
+            const dy = mouseY - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // 2. Auto-Aim Logic
+            let nearestDist = 9999;
+            let target = null;
+
+            this.game.entities.forEach(ent => {
+                if (ent.hp > 0 && !ent.markedForDeletion) {
+                    const ex = ent.x - this.x;
+                    const ey = ent.y - this.y;
+                    const d = Math.sqrt(ex * ex + ey * ey);
+                    if (d < nearestDist && d < 400) {
+                        nearestDist = d;
+                        target = ent;
+                    }
+                }
+            });
+
+            if (target) {
+                const tx = target.x - this.x;
+                const ty = target.y - this.y;
+                const targetAngle = Math.atan2(ty, tx);
+
+                // Smooth Rotation (Lerp)
+                let diff = targetAngle - this.swordAngle;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+
+                this.swordAngle += diff * 10 * dt;
+            } else if (dist > 10) {
+                // If moving and no target, face movement
+                const targetAngle = Math.atan2(dy, dx);
+
+                let diff = targetAngle - this.swordAngle;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+
+                this.swordAngle += diff * 10 * dt;
+            }
+
+            // Move if far enough (prevent jitter)
+            if (dist > 10) {
+                const moveX = (dx / dist);
+                const moveY = (dy / dist);
+
+                // Update Facing Direction
+                if (moveX > 0) this.facingX = 1;
+                if (moveX < 0) this.facingX = -1;
+
+                this.x += moveX * this.speed * dt;
+                this.y += moveY * this.speed * dt;
+            }
         }
 
         this.x = Math.max(0, Math.min(this.game.canvas.width, this.x));
