@@ -33,8 +33,8 @@ export default class Game {
         this.particles = [];
         this.texts = [];
         this.gold = 0; // Persistent Gold
-        this.energy = 50;
-        this.maxEnergy = 50;
+        this.energy = 30;
+        this.maxEnergy = 30;
         this.shake = 0;
 
         // Persistent Upgrades
