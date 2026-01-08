@@ -42,8 +42,19 @@
       <div id="start-screen">
         <h1>Pirate Scavenger</h1>
         <p>Collect treasure before the sun sets!</p>
-        <button id="start-game-btn-mouse">Start (Mouse)</button>
-        <button id="start-game-btn-wasd">Start (WASD)</button>
+
+        <div class="options-container">
+          <span class="toggle-label">Enable Rocks:</span>
+          <label class="switch">
+            <input type="checkbox" id="rock-toggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="start-btn-container">
+          <button id="start-game-btn-mouse" class="start-btn">Start (Mouse)</button>
+          <button id="start-game-btn-wasd" class="start-btn wasd">Start (WASD)</button>
+        </div>
       </div>
     </div>
     <canvas id="game-canvas"></canvas>

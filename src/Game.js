@@ -32,7 +32,7 @@ export default class Game {
         this.particles = [];
         this.texts = [];
         this.gold = 0; // Persistent Gold
-        this.energy = 999;
+        this.energy = 100;
         this.maxEnergy = 999;
         this.shake = 0;
 
@@ -168,11 +168,19 @@ export default class Game {
             this.pet = null;
         }
 
+        // Read Options
+        const rockToggle = document.getElementById('rock-toggle');
+        this.rocksEnabled = rockToggle ? rockToggle.checked : true;
+
+        console.log(`Spawned ${this.entities.length} entities. Rocks Enabled: ${this.rocksEnabled}`);
+
         // Static Spawning - Immediate
         // Chests
         for (let i = 0; i < 15; i++) this.spawnEntity('chest');
         // Rocks
-        for (let i = 0; i < 15; i++) this.spawnEntity('rock');
+        if (this.rocksEnabled) {
+            for (let i = 0; i < 15; i++) this.spawnEntity('rock');
+        }
         // Crabs
         for (let i = 0; i < 10; i++) this.spawnEntity('crab');
         // Pirates (Few)
