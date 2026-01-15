@@ -26,7 +26,7 @@ export default class Player {
         this.pistolCooldown = 1.0;
         this.pistolTimer = 0;
         this.pistolAnimTimer = 0;
-        this.pistolAnimDuration = 0.4;
+        this.pistolAnimDuration = 0.6; // Slower animation
         this.pistolTargetAngle = 0;
     }
 
@@ -183,21 +183,21 @@ export default class Player {
 
             // Smoke at muzzle
             import('./Particle.js').then(({ spawnParticles }) => {
-                spawnParticles(this.game, this.x + 20 * this.facingX, this.y, '#cccccc', 10, 'burst');
+                spawnParticles(this.game, this.x + 20 * this.facingX, this.y, '#cccccc', 20, 'burst');
             });
 
             // Bullet Trail (Smoke Line)
             this.game.particles.push({
                 x: this.x + 20 * this.facingX, y: this.y, // Muzzle offset
                 tx: target.x, ty: target.y,
-                life: 0.3,
+                life: 0.5, // Lingers longer
                 update: function (dt) { this.life -= dt; },
                 draw: function (ctx) {
                     ctx.save();
-                    ctx.globalAlpha = this.life / 0.3;
-                    ctx.strokeStyle = '#eeeeee'; // White/Gray smoke
-                    ctx.lineWidth = 3; // Thicker smoke
-                    ctx.setLineDash([10, 10]); // Dashed smoke trail? Or solid? Solid is fine for speed.
+                    ctx.globalAlpha = this.life / 0.5;
+                    ctx.strokeStyle = '#dddddd'; // Slightly lighter
+                    ctx.lineWidth = 4; // Thicker
+                    ctx.setLineDash([15, 10]);
                     ctx.beginPath();
                     ctx.moveTo(this.x, this.y);
                     ctx.lineTo(this.tx, this.ty);
