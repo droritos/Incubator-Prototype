@@ -181,27 +181,39 @@ export default class Player {
                 this.game.texts.push(new FloatingText("BANG!", this.x, this.y - 50, '#ff4400', 24));
             });
 
-            // Smoke at muzzle
+            // Muzzle Flash (Bright & Instant)
             import('./Particle.js').then(({ spawnParticles }) => {
-                spawnParticles(this.game, this.x + 20 * this.facingX, this.y, '#cccccc', 20, 'burst');
+                // Bright Flash
+                spawnParticles(this.game, this.x + 30 * this.facingX, this.y, '#ffff00', 10, 'explosion');
+                // Dark Smoke (High Contrast against sand)
+                spawnParticles(this.game, this.x + 30 * this.facingX, this.y, '#333333', 15, 'burst');
             });
 
-            // Bullet Trail (Smoke Line)
+            // Bullet Trail (Dark Gunpowder Smoke)
             this.game.particles.push({
-                x: this.x + 20 * this.facingX, y: this.y, // Muzzle offset
+                x: this.x + 30 * this.facingX, y: this.y, // Muzzle offset
                 tx: target.x, ty: target.y,
-                life: 0.5, // Lingers longer
+                life: 0.6,
                 update: function (dt) { this.life -= dt; },
                 draw: function (ctx) {
                     ctx.save();
-                    ctx.globalAlpha = this.life / 0.5;
-                    ctx.strokeStyle = '#dddddd'; // Slightly lighter
-                    ctx.lineWidth = 4; // Thicker
-                    ctx.setLineDash([15, 10]);
+                    ctx.globalAlpha = Math.min(1, this.life / 0.3); // Fade out
+
+                    // Outer dark smoke
+                    ctx.strokeStyle = '#222222';
+                    ctx.lineWidth = 6;
+                    ctx.setLineDash([20, 10]);
                     ctx.beginPath();
                     ctx.moveTo(this.x, this.y);
                     ctx.lineTo(this.tx, this.ty);
                     ctx.stroke();
+
+                    // Inner bright core (tracer effect)
+                    ctx.strokeStyle = '#aaaaaa';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([]);
+                    ctx.stroke();
+
                     ctx.restore();
                 }
             });
