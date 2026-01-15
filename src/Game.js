@@ -62,7 +62,7 @@ export default class Game {
             sand: new Image()
         };
         this.assetsLoaded = 0;
-        this.totalAssets = 9;
+        this.totalAssets = 10;
         this.bgPattern = null;
         this.cannonTimer = 0;
         this.hitStopDuration = 0;
@@ -107,6 +107,7 @@ export default class Game {
         load('carrot', './sprites/carrot.png');
         load('parrot', './sprites/parrot.png');
         load('pirate', './sprites/pirate.png');
+        load('pistol', './sprites/pistol.png');
     }
 
     resize() {
@@ -133,6 +134,13 @@ export default class Game {
             const rect = this.canvas.getBoundingClientRect();
             this.input.mouse.x = e.clientX - rect.left;
             this.input.mouse.y = e.clientY - rect.top;
+        });
+
+        window.addEventListener('mousedown', () => {
+            this.input.fire = true;
+        });
+        window.addEventListener('mouseup', () => {
+            this.input.fire = false;
         });
 
         const startMouse = () => this.startGame('MOUSE');

@@ -21,9 +21,23 @@ export default class Player {
         // Visuals
         this.swingDirection = 1; // 1 (right->left) or -1 (left->right) relative to aim
         this.facingX = 1; // 1 or -1
+
+        // Pistol
+        this.pistolCooldown = 1.0;
+        this.pistolTimer = 0;
+        this.pistolAnimTimer = 0;
+        this.pistolAnimDuration = 0.4;
     }
 
     update(dt) {
+        // Pistol Logic
+        if (this.pistolTimer > 0) this.pistolTimer -= dt;
+        if (this.pistolAnimTimer > 0) this.pistolAnimTimer -= dt;
+
+        if (this.game.input.fire && this.pistolTimer <= 0) {
+            this.firePistol();
+        }
+
         if (this.game.controlMode === 'WASD') {
             // WASD Movement
             let moveX = 0;
@@ -131,6 +145,58 @@ export default class Player {
             } else {
                 this.checkCollisions();
             }
+        }
+    }
+
+    firePistol() {
+        // Find FURTHEST enemy in range
+        let furthestDist = 0;
+        let target = null;
+        const range = 600;
+
+        this.game.entities.forEach(ent => {
+            if (ent.hp > 0 && !ent.markedForDeletion) {
+                const dx = ent.x - this.x;
+                const dy = ent.y - this.y;
+                const d = Math.sqrt(dx * dx + dy * dy);
+                if (d > furthestDist && d < range) {
+                    furthestDist = d;
+                    target = ent;
+                }
+            }
+        });
+
+        if (target) {
+            this.pistolTimer = this.pistolCooldown;
+            this.pistolAnimTimer = this.pistolAnimDuration;
+
+            // Deal Damage
+            target.takeDamage(this.game.stats.damage * 2); // Double damage for pistol
+
+            // Effects
+            this.game.shake = 5;
+            import('./FloatingText.js').then(({ FloatingText }) => {
+                this.game.texts.push(new FloatingText("BANG!", this.x, this.y - 50, '#ff4400', 24));
+            });
+
+            // Tracer Line
+            this.game.particles.push({
+                x: this.x, y: this.y,
+                tx: target.x, ty: target.y,
+                life: 0.2,
+                update: function (dt) { this.life -= dt; },
+                draw: function (ctx) {
+                    ctx.save();
+                    ctx.globalAlpha = this.life / 0.2;
+                    ctx.strokeStyle = '#ffff00';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(this.x, this.y);
+                    ctx.lineTo(this.tx, this.ty);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            });
         }
     }
 
@@ -245,6 +311,23 @@ export default class Player {
             drawSprite(ctx, this.game.assets.player, this.x, this.y, this.width, this.height, 0, this.facingX);
         } else {
             drawBlockyRect(ctx, this.x, this.y, 30, 50, this.color);
+        }
+
+        // Draw Pistol ("Pop Up")
+        if (this.pistolAnimTimer > 0 && this.game.assets.pistol) {
+            ctx.save();
+            ctx.translate(this.x, this.y - 10);
+            // Animation: Scale up then down, pop rotation
+            const t = this.pistolAnimTimer / this.pistolAnimDuration; // 1.0 -> 0.0
+            const scale = Math.sin(t * Math.PI) * 1.5;
+            const angle = (1 - t) * -0.5; // recoil back
+
+            ctx.rotate(angle);
+            // Pistol face left/right aligned with facingX
+            ctx.scale(this.facingX * scale, scale);
+
+            ctx.drawImage(this.game.assets.pistol, -16, -16, 32, 32);
+            ctx.restore();
         }
 
         // Sword
