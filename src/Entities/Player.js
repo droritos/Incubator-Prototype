@@ -27,6 +27,7 @@ export default class Player {
         this.pistolTimer = 0;
         this.pistolAnimTimer = 0;
         this.pistolAnimDuration = 0.4;
+        this.pistolTargetAngle = 0;
     }
 
     update(dt) {
@@ -169,6 +170,7 @@ export default class Player {
         if (target) {
             this.pistolTimer = this.pistolCooldown;
             this.pistolAnimTimer = this.pistolAnimDuration;
+            this.pistolTargetAngle = Math.atan2(target.y - this.y, target.x - this.x);
 
             // Deal Damage
             target.takeDamage(this.game.stats.damage * 2); // Double damage for pistol
@@ -179,17 +181,23 @@ export default class Player {
                 this.game.texts.push(new FloatingText("BANG!", this.x, this.y - 50, '#ff4400', 24));
             });
 
-            // Tracer Line
+            // Smoke at muzzle
+            import('./Particle.js').then(({ spawnParticles }) => {
+                spawnParticles(this.game, this.x + 20 * this.facingX, this.y, '#cccccc', 10, 'burst');
+            });
+
+            // Bullet Trail (Smoke Line)
             this.game.particles.push({
-                x: this.x, y: this.y,
+                x: this.x + 20 * this.facingX, y: this.y, // Muzzle offset
                 tx: target.x, ty: target.y,
-                life: 0.2,
+                life: 0.3,
                 update: function (dt) { this.life -= dt; },
                 draw: function (ctx) {
                     ctx.save();
-                    ctx.globalAlpha = this.life / 0.2;
-                    ctx.strokeStyle = '#ffff00';
-                    ctx.lineWidth = 2;
+                    ctx.globalAlpha = this.life / 0.3;
+                    ctx.strokeStyle = '#eeeeee'; // White/Gray smoke
+                    ctx.lineWidth = 3; // Thicker smoke
+                    ctx.setLineDash([10, 10]); // Dashed smoke trail? Or solid? Solid is fine for speed.
                     ctx.beginPath();
                     ctx.moveTo(this.x, this.y);
                     ctx.lineTo(this.tx, this.ty);
@@ -320,13 +328,20 @@ export default class Player {
             // Animation: Scale up then down, pop rotation
             const t = this.pistolAnimTimer / this.pistolAnimDuration; // 1.0 -> 0.0
             const scale = Math.sin(t * Math.PI) * 1.5;
-            const angle = (1 - t) * -0.5; // recoil back
 
-            ctx.rotate(angle);
+            // Aim Logic
+            let aimAngle = this.pistolTargetAngle;
+            if (this.facingX === -1) aimAngle = Math.PI - aimAngle;
+
+            const recoil = (1 - t) * -0.5; // recoil back
+
+            ctx.rotate(aimAngle + recoil);
+
             // Pistol face left/right aligned with facingX
             ctx.scale(this.facingX * scale, scale);
 
-            ctx.drawImage(this.game.assets.pistol, -16, -16, 32, 32);
+            // Draw Bigger (56x56) centered
+            ctx.drawImage(this.game.assets.pistol, -28, -28, 56, 56);
             ctx.restore();
         }
 
