@@ -108,6 +108,7 @@ export default class Game {
         load('parrot', './sprites/parrot.png');
         load('pirate', './sprites/pirate.png');
         load('pistol', './sprites/pistol.png');
+        load('water', './sprites/water.png');
     }
 
     resize() {
@@ -362,8 +363,16 @@ export default class Game {
         }
 
         // Draw Water Background
-        this.ctx.fillStyle = '#4da6ff'; // Deep Blue
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        if (this.assets.water && this.assets.water.complete && this.assets.water.naturalWidth !== 0) {
+            if (!this.waterPattern) {
+                this.waterPattern = this.ctx.createPattern(this.assets.water, 'repeat');
+            }
+            this.ctx.fillStyle = this.waterPattern;
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        } else {
+            this.ctx.fillStyle = '#4da6ff'; // Fallback
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
 
         // Draw Island
         if (this.islandVertices && this.islandVertices.length > 0) {
@@ -373,6 +382,14 @@ export default class Game {
                 this.ctx.lineTo(this.islandVertices[i].x, this.islandVertices[i].y);
             }
             this.ctx.closePath();
+
+            // Foam Effect (Behind Sand)
+            this.ctx.save();
+            this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            this.ctx.lineWidth = 40; // Thick foam
+            this.ctx.lineJoin = 'round';
+            this.ctx.stroke();
+            this.ctx.restore();
 
             // Sand Texture Fill
             if (this.assets.sand && this.assets.sand.complete && this.assets.sand.naturalWidth !== 0) {
