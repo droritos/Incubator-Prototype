@@ -80,16 +80,16 @@ export default class Pirate {
         let facing = this.dirX;
         const flash = this.flashTimer > 0 ? '#ff0000' : null;
 
-        // Draw MOUNT (Crab) underneath
-        if (this.game.assets.crab) {
-            // Bobbing effect for ride
+        // Draw Consolidated Pirate Rider Sprite
+        // Increase size slightly to account for mount
+        if (this.game.assets.pirate_rider) {
             const bob = Math.sin(Date.now() / 150) * 3;
-            drawSprite(ctx, this.game.assets.crab, this.x, this.y + 10 + bob, this.width * 1.2, this.height * 0.8, 0, facing, 1, 1, flash);
+            drawSprite(ctx, this.game.assets.pirate_rider, this.x, this.y + bob, this.width * 1.5, this.height * 1.5, 0, facing, this.scaleY, 1, flash);
+        } else {
+            // Fallback
+            drawSprite(ctx, this.game.assets.pirate, this.x, this.y, this.width, this.height, 0, facing, this.scaleY, 1, flash);
         }
 
-        // Draw RIDER (Pirate) slightly offset up
-        drawSprite(ctx, this.game.assets.pirate, this.x, this.y - 10, this.width, this.height, 0, facing, this.scaleY, 1, flash);
-
-        drawHealthBar(ctx, this.x, this.y - 40, this.width, this.hp, this.maxHp);
+        drawHealthBar(ctx, this.x, this.y - 50, this.width, this.hp, this.maxHp);
     }
 }

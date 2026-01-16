@@ -109,6 +109,7 @@ export default class Game {
         load('pirate', './sprites/pirate.png');
         load('pistol', './sprites/pistol.png');
         load('water', './sprites/water.png');
+        load('pirate_rider', './sprites/pirate_rider.png');
     }
 
     resize() {
