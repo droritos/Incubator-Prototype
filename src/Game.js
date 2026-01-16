@@ -189,15 +189,15 @@ export default class Game {
 
         // Static Spawning - Immediate
         // Chests
-        for (let i = 0; i < 15; i++) this.spawnEntity('chest');
+        for (let i = 0; i < 7; i++) this.spawnEntity('chest');
         // Rocks
         if (this.rocksEnabled) {
-            for (let i = 0; i < 15; i++) this.spawnEntity('rock');
+            for (let i = 0; i < 5; i++) this.spawnEntity('rock');
         }
         // Crabs
-        for (let i = 0; i < 10; i++) this.spawnEntity('crab');
+        for (let i = 0; i < 5; i++) this.spawnEntity('crab');
         // Pirates (Few)
-        for (let i = 0; i < 5; i++) this.spawnEntity('pirate');
+        for (let i = 0; i < 3; i++) this.spawnEntity('pirate');
 
         console.log(`Spawned ${this.entities.length} entities.`);
         this.ui.showHUD();
@@ -205,34 +205,50 @@ export default class Game {
 
     generateIsland() {
         const points = 32;
-        const baseRadius = Math.min(this.canvas.width, this.canvas.height) * 0.45; // 45% of screen min dimension
+        // Widescreen support: Different X and Y base radii
+        const baseRadiusX = this.canvas.width * 0.45; // 45% of width
+        const baseRadiusY = this.canvas.height * 0.45; // 45% of height
+
         const variance = 100;
 
         this.islandVertices = [];
-        let radii = [];
+        let noiseValues = [];
 
-        // 1. Generate Random Radii
+        // 1. Generate Random Noise
         for (let i = 0; i < points; i++) {
-            radii.push(baseRadius + (Math.random() - 0.5) * variance);
+            noiseValues.push((Math.random() - 0.5) * variance);
         }
 
-        // 2. Smooth Radii (Box Blur) to make it organic/curvy, not jagged
-        const smoothed = [];
+        // 2. Smooth Noise (Box Blur)
+        const smoothedNoise = [];
         for (let i = 0; i < points; i++) {
-            const prev = radii[(i - 1 + points) % points];
-            const curr = radii[i];
-            const next = radii[(i + 1) % points];
-            smoothed.push((prev + curr + next) / 3);
+            const prev = noiseValues[(i - 1 + points) % points];
+            const curr = noiseValues[i];
+            const next = noiseValues[(i + 1) % points];
+            smoothedNoise.push((prev + curr + next) / 3);
         }
 
-        // 3. Create Vertices
+        // 3. Create Vertices (Elliptical)
         for (let i = 0; i < points; i++) {
             const angle = (i / points) * Math.PI * 2;
-            const r = smoothed[i];
+            const noise = smoothedNoise[i];
+
+            // Apply noise to base ellipse dimensions
+            const rX = baseRadiusX + noise;
+            const rY = baseRadiusY + noise;
+
+            const vx = this.canvas.width / 2 + Math.cos(angle) * rX;
+            const vy = this.canvas.height / 2 + Math.sin(angle) * rY;
+
+            // Calculate actual distance from center for collision logic
+            const dx = vx - this.canvas.width / 2;
+            const dy = vy - this.canvas.height / 2;
+            const realDist = Math.sqrt(dx * dx + dy * dy);
+
             this.islandVertices.push({
-                x: this.canvas.width / 2 + Math.cos(angle) * r,
-                y: this.canvas.height / 2 + Math.sin(angle) * r,
-                r: r, // Store for logic
+                x: vx,
+                y: vy,
+                r: realDist, // Crucial: Store actual distance so checkBounds works
                 angle: angle
             });
         }
