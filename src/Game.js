@@ -114,6 +114,12 @@ export default class Game {
     resize() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
+        this.ctx.imageSmoothingEnabled = false;
+
+        // Keep island correct
+        if (this.islandVertices && this.islandVertices.length > 0) {
+            this.generateIsland();
+        }
     }
 
     setupInput() {
@@ -332,7 +338,7 @@ export default class Game {
     }
 
     checkBounds(entity) {
-        if (!this.islandVertices) return;
+        if (!this.islandVertices || this.islandVertices.length === 0) return;
 
         const dx = entity.x - this.islandCenter.x;
         const dy = entity.y - this.islandCenter.y;
@@ -344,19 +350,26 @@ export default class Game {
         // Find sector
         const points = this.islandVertices.length;
         const sectorAngle = (Math.PI * 2) / points;
-        const index = Math.floor(angle / sectorAngle);
+
+        let index = Math.floor(angle / sectorAngle);
+        index = index % points; // Safety wrap
+
         const nextIndex = (index + 1) % points;
 
         // Linear Interpolate Radius
-        const r1 = this.islandVertices[index].r;
-        const r2 = this.islandVertices[nextIndex].r;
+        const v1 = this.islandVertices[index];
+        const v2 = this.islandVertices[nextIndex];
+
+        if (!v1 || !v2) return; // Paranoia check
+
+        const r1 = v1.r;
+        const r2 = v2.r;
         const t = (angle - (index * sectorAngle)) / sectorAngle;
         const maxDist = r1 + (r2 - r1) * t;
 
-        if (dist > maxDist - 20) { // -20 buffer to keep inside
-            // Push back
-            const pushAngle = angle + Math.PI; // Opposite
-            const overlap = dist - (maxDist - 20);
+        if (dist > maxDist - 30) { // Increased buffer
+            // Push back HARD
+            const overlap = dist - (maxDist - 30);
             entity.x -= Math.cos(angle) * overlap;
             entity.y -= Math.sin(angle) * overlap;
         }

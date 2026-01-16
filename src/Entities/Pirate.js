@@ -60,11 +60,7 @@ export default class Pirate {
             this.y += this.dirY * (this.speed * 0.5) * dt;
         }
 
-        // Bounce bounds
-        if (this.x < 0) this.x = 0;
-        if (this.x > this.game.canvas.width) this.x = this.game.canvas.width;
-        if (this.y < 0) this.y = 0;
-        if (this.y > this.game.canvas.height) this.y = this.game.canvas.height;
+
 
         // Collision with player
         if (dist < 40) {
