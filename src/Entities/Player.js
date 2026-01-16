@@ -194,7 +194,10 @@ export default class Player {
                 x: this.x + 30 * this.facingX, y: this.y, // Muzzle offset
                 tx: target.x, ty: target.y,
                 life: 0.6,
-                update: function (dt) { this.life -= dt; },
+                update: function (dt) {
+                    this.life -= dt;
+                    if (this.life <= 0) this.markedForDeletion = true;
+                },
                 draw: function (ctx) {
                     ctx.save();
                     ctx.globalAlpha = Math.min(1, this.life / 0.3); // Fade out
@@ -338,9 +341,8 @@ export default class Player {
 
         // Draw Pistol ("Pop Up") logic...
         if (this.pistolAnimTimer > 0 && this.game.assets.pistol) {
-            // ... existing pistol logic ...
             ctx.save();
-            ctx.translate(this.x, this.y - 10);
+            ctx.translate(this.x + (25 * this.facingX), this.y - 10);
             const t = this.pistolAnimTimer / this.pistolAnimDuration;
             const scale = Math.sin(t * Math.PI) * 1.5;
 
