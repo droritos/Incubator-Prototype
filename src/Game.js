@@ -330,9 +330,8 @@ export default class Game {
             // Respawn Logic
             if (this.entities.length < 20) {
                 const r = Math.random();
-                if (r < 0.3) this.spawnEntity('chest');
-                else if (r < 0.7) this.spawnEntity('crab');
-                else this.spawnEntity('pirate');
+                if (r < 0.4) this.spawnEntity('chest');
+                else this.spawnEntity('pirate'); // M O R E   P I R A T E S
             }
         }
     }
