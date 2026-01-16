@@ -311,18 +311,21 @@ export default class Player {
         const reach = 50 + this.game.stats.range;
         const arc = (Math.PI / 3) + (this.game.stats.arc * Math.PI / 180);
 
-        // Draw Aim Cone
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, reach, this.swordAngle - arc / 2, this.swordAngle + arc / 2);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.restore();
+        // Only draw Aim Cone and Sword if NOT shooting pistol
+        if (this.pistolAnimTimer <= 0) {
+            // Draw Aim Cone
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, reach, this.swordAngle - arc / 2, this.swordAngle + arc / 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.restore();
+        }
 
         // Sprite (Frozen Rotation, just flip X)
         if (this.game.assets && this.game.assets.player) {
@@ -333,91 +336,87 @@ export default class Player {
             drawBlockyRect(ctx, this.x, this.y, 30, 50, this.color);
         }
 
-        // Draw Pistol ("Pop Up")
+        // Draw Pistol ("Pop Up") logic...
         if (this.pistolAnimTimer > 0 && this.game.assets.pistol) {
+            // ... existing pistol logic ...
             ctx.save();
             ctx.translate(this.x, this.y - 10);
-            // Animation: Scale up then down, pop rotation
-            const t = this.pistolAnimTimer / this.pistolAnimDuration; // 1.0 -> 0.0
+            const t = this.pistolAnimTimer / this.pistolAnimDuration;
             const scale = Math.sin(t * Math.PI) * 1.5;
 
             // Aim Logic
             let aimAngle = this.pistolTargetAngle;
             if (this.facingX === -1) aimAngle = Math.PI - aimAngle;
 
-            const recoil = (1 - t) * -0.5; // recoil back
+            const recoil = (1 - t) * -0.5;
 
             ctx.rotate(aimAngle + recoil);
-
-            // Pistol face left/right aligned with facingX
             ctx.scale(this.facingX * scale, scale);
-
-            // Draw Bigger (56x56) centered
             ctx.drawImage(this.game.assets.pistol, -28, -28, 56, 56);
             ctx.restore();
-        }
+        } else {
+            // Draw Sword (Only if not shooting)
+            ctx.save();
+            ctx.translate(this.x, this.y);
 
-        // Sword
-        ctx.save();
-        ctx.translate(this.x, this.y);
+            let displayAngle = this.swordAngle;
 
-        let displayAngle = this.swordAngle;
+            if (this.isSwinging) {
+                const progress = this.swingTimer / this.swingDuration;
+                // Alternating Swing Logic
+                // If direction is 1: Start at -arc/2, go to arc/2
+                // If direction is -1: Start at arc/2, go to -arc/2
+                let start = -arc / 2;
+                let end = arc / 2;
 
-        if (this.isSwinging) {
-            const progress = this.swingTimer / this.swingDuration;
-            // Alternating Swing Logic
-            // If direction is 1: Start at -arc/2, go to arc/2
-            // If direction is -1: Start at arc/2, go to -arc/2
-            let start = -arc / 2;
-            let end = arc / 2;
+                if (this.swingDirection === -1) {
+                    start = arc / 2;
+                    end = -arc / 2;
+                }
 
-            if (this.swingDirection === -1) {
-                start = arc / 2;
-                end = -arc / 2;
+                const offset = start + (end - start) * progress;
+                displayAngle += offset;
+            } else {
+                // Idle position depends on last swing direction? Or just keep it at one side?
+                // Usually keeping it at readable "ready" pos is good. Let's say right side.
+                displayAngle += (arc / 2) * this.swingDirection;
             }
 
-            const offset = start + (end - start) * progress;
-            displayAngle += offset;
-        } else {
-            // Idle position depends on last swing direction? Or just keep it at one side?
-            // Usually keeping it at readable "ready" pos is good. Let's say right side.
-            displayAngle += (arc / 2) * this.swingDirection;
+            ctx.rotate(displayAngle);
+            ctx.translate(20, 0); // Offset from body
+
+            // Draw Blade
+            ctx.fillStyle = '#C0C0C0';
+            ctx.shadowColor = '#fff';
+            ctx.shadowBlur = 5;
+            ctx.fillRect(0, -2, reach - 20, 6); // Adjust length
+            ctx.shadowBlur = 0;
+
+            // Handle
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(-5, -3, 15, 6);
+            ctx.fillStyle = '#ffd700'; // Gold guard
+            ctx.fillRect(-5, -6, 4, 12);
+
+            // Trail
+            if (this.isSwinging) {
+                const progress = this.swingTimer / this.swingDuration;
+                ctx.beginPath();
+                // Draw arc in direction of swing
+                // If swinging "forward" (negative to positive angle relative to aim), draw arc
+                const startAng = (this.swingDirection === 1) ? -arc / 2 : arc / 2;
+                const endAng = (this.swingDirection === 1) ? (-arc / 2 + arc * progress) : (arc / 2 - arc * progress);
+
+                // Simple line trail for now
+                ctx.moveTo(-20, 0);
+                ctx.lineTo(reach - 20, 0);
+
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 - progress})`;
+                ctx.lineWidth = 4;
+                ctx.stroke();
+            }
+
+            ctx.restore();
         }
-
-        ctx.rotate(displayAngle);
-        ctx.translate(20, 0); // Offset from body
-
-        // Draw Blade
-        ctx.fillStyle = '#C0C0C0';
-        ctx.shadowColor = '#fff';
-        ctx.shadowBlur = 5;
-        ctx.fillRect(0, -2, reach - 20, 6); // Adjust length
-        ctx.shadowBlur = 0;
-
-        // Handle
-        ctx.fillStyle = '#654321';
-        ctx.fillRect(-5, -3, 15, 6);
-        ctx.fillStyle = '#ffd700'; // Gold guard
-        ctx.fillRect(-5, -6, 4, 12);
-
-        // Trail
-        if (this.isSwinging) {
-            const progress = this.swingTimer / this.swingDuration;
-            ctx.beginPath();
-            // Draw arc in direction of swing
-            // If swinging "forward" (negative to positive angle relative to aim), draw arc
-            const startAng = (this.swingDirection === 1) ? -arc / 2 : arc / 2;
-            const endAng = (this.swingDirection === 1) ? (-arc / 2 + arc * progress) : (arc / 2 - arc * progress);
-
-            // Simple line trail for now
-            ctx.moveTo(-20, 0);
-            ctx.lineTo(reach - 20, 0);
-
-            ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 - progress})`;
-            ctx.lineWidth = 4;
-            ctx.stroke();
-        }
-
-        ctx.restore();
     }
 }
