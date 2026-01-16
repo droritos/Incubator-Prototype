@@ -169,6 +169,9 @@ export default class Game {
         this.texts = []; // Reset texts too
         this.shake = 0;
 
+        // Generate Island Shape
+        this.generateIsland();
+
         // Reset Pet
         if (this.stats.petLevel > 0) {
             const type = (this.stats.petLevel === 2) ? 'parrot' : 'carrot';
@@ -197,6 +200,42 @@ export default class Game {
 
         console.log(`Spawned ${this.entities.length} entities.`);
         this.ui.showHUD();
+    }
+
+    generateIsland() {
+        const points = 32;
+        const baseRadius = Math.min(this.canvas.width, this.canvas.height) * 0.45; // 45% of screen min dimension
+        const variance = 100;
+
+        this.islandVertices = [];
+        let radii = [];
+
+        // 1. Generate Random Radii
+        for (let i = 0; i < points; i++) {
+            radii.push(baseRadius + (Math.random() - 0.5) * variance);
+        }
+
+        // 2. Smooth Radii (Box Blur) to make it organic/curvy, not jagged
+        const smoothed = [];
+        for (let i = 0; i < points; i++) {
+            const prev = radii[(i - 1 + points) % points];
+            const curr = radii[i];
+            const next = radii[(i + 1) % points];
+            smoothed.push((prev + curr + next) / 3);
+        }
+
+        // 3. Create Vertices
+        for (let i = 0; i < points; i++) {
+            const angle = (i / points) * Math.PI * 2;
+            const r = smoothed[i];
+            this.islandVertices.push({
+                x: this.canvas.width / 2 + Math.cos(angle) * r,
+                y: this.canvas.height / 2 + Math.sin(angle) * r,
+                r: r, // Store for logic
+                angle: angle
+            });
+        }
+        this.islandCenter = { x: this.canvas.width / 2, y: this.canvas.height / 2 };
     }
 
     start() {
@@ -235,11 +274,19 @@ export default class Game {
                 if (this.shake < 0) this.shake = 0;
             }
 
-            if (this.player) this.player.update(dt);
+            if (this.player) {
+                this.player.update(dt);
+                this.checkBounds(this.player);
+            }
             if (this.pet) this.pet.update(dt);
 
             // Update entities
-            this.entities.forEach(ent => ent.update(dt));
+            this.entities.forEach(ent => {
+                ent.update(dt);
+                if (ent.type === 'Crab' || ent.type === 'Pirate') {
+                    this.checkBounds(ent);
+                }
+            });
             this.particles.forEach(p => p.update(dt));
             this.texts.forEach(t => t.update(dt));
 
@@ -267,6 +314,37 @@ export default class Game {
         }
     }
 
+    checkBounds(entity) {
+        if (!this.islandVertices) return;
+
+        const dx = entity.x - this.islandCenter.x;
+        const dy = entity.y - this.islandCenter.y;
+        let angle = Math.atan2(dy, dx);
+        if (angle < 0) angle += Math.PI * 2;
+
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Find sector
+        const points = this.islandVertices.length;
+        const sectorAngle = (Math.PI * 2) / points;
+        const index = Math.floor(angle / sectorAngle);
+        const nextIndex = (index + 1) % points;
+
+        // Linear Interpolate Radius
+        const r1 = this.islandVertices[index].r;
+        const r2 = this.islandVertices[nextIndex].r;
+        const t = (angle - (index * sectorAngle)) / sectorAngle;
+        const maxDist = r1 + (r2 - r1) * t;
+
+        if (dist > maxDist - 20) { // -20 buffer to keep inside
+            // Push back
+            const pushAngle = angle + Math.PI; // Opposite
+            const overlap = dist - (maxDist - 20);
+            entity.x -= Math.cos(angle) * overlap;
+            entity.y -= Math.sin(angle) * overlap;
+        }
+    }
+
     gameOver() {
         console.log("Game Over - Opening Shop");
         this.ui.showShop();
@@ -283,16 +361,35 @@ export default class Game {
             this.ctx.translate(dx, dy);
         }
 
-        // Draw Background
-        if (this.assets.sand && this.assets.sand.complete && this.assets.sand.naturalWidth !== 0) {
-            if (!this.bgPattern) {
-                this.bgPattern = this.ctx.createPattern(this.assets.sand, 'repeat');
+        // Draw Water Background
+        this.ctx.fillStyle = '#4da6ff'; // Deep Blue
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Draw Island
+        if (this.islandVertices && this.islandVertices.length > 0) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.islandVertices[0].x, this.islandVertices[0].y);
+            for (let i = 1; i < this.islandVertices.length; i++) {
+                this.ctx.lineTo(this.islandVertices[i].x, this.islandVertices[i].y);
             }
-            this.ctx.fillStyle = this.bgPattern;
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        } else {
-            this.ctx.fillStyle = '#e0cda7'; // Fallback Sand
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.closePath();
+
+            // Sand Texture Fill
+            if (this.assets.sand && this.assets.sand.complete && this.assets.sand.naturalWidth !== 0) {
+                if (!this.bgPattern) {
+                    this.bgPattern = this.ctx.createPattern(this.assets.sand, 'repeat');
+                }
+                this.ctx.fillStyle = this.bgPattern;
+            } else {
+                this.ctx.fillStyle = '#e0cda7'; // Fallback
+            }
+
+            this.ctx.fill();
+
+            // Shoreline Outline
+            this.ctx.strokeStyle = '#d0b080';
+            this.ctx.lineWidth = 10;
+            this.ctx.stroke();
         }
 
         if (this.state === 'PLAYING') {
@@ -313,8 +410,26 @@ export default class Game {
         this.ui.update();
     }
     spawnEntity(type) {
-        const x = Math.random() * (this.canvas.width - 100) + 50;
-        const y = Math.random() * (this.canvas.height - 100) + 50;
+        if (!this.islandVertices) return;
+
+        // Polar Random Spawn
+        const angle = Math.random() * Math.PI * 2;
+        // Find radius limit at this angle
+        const points = this.islandVertices.length;
+        const sectorAngle = (Math.PI * 2) / points;
+        const index = Math.floor(angle / sectorAngle);
+        const nextIndex = (index + 1) % points;
+        const r1 = this.islandVertices[index].r;
+        const r2 = this.islandVertices[nextIndex].r;
+        const t = (angle - (index * sectorAngle)) / sectorAngle;
+        const maxR = r1 + (r2 - r1) * t;
+
+        // Random dist from 0 to maxR - padding
+        const dist = Math.sqrt(Math.random()) * (maxR - 50); // sqrt for uniform distribution
+
+        const x = this.islandCenter.x + Math.cos(angle) * dist;
+        const y = this.islandCenter.y + Math.sin(angle) * dist;
+
         if (type === 'chest') this.entities.push(new Chest(this, x, y));
         if (type === 'rock') this.entities.push(new Rock(this, x, y));
         if (type === 'crab') this.entities.push(new Crab(this, x, y));
@@ -324,8 +439,11 @@ export default class Game {
     fireCannons() {
         const count = this.stats.cannonLevel * 1;
         for (let i = 0; i < count; i++) {
-            const tx = this.player.x + (Math.random() - 0.5) * 600;
-            const ty = this.player.y + (Math.random() - 0.5) * 600;
+            // Random target on island
+            const angle = Math.random() * Math.PI * 2;
+            const dist = Math.random() * 300; // Close to center roughly
+            const tx = this.islandCenter.x + Math.cos(angle) * dist;
+            const ty = this.islandCenter.y + Math.sin(angle) * dist;
 
             setTimeout(() => {
                 this.entities.push(new CannonBall(this, tx, ty));
