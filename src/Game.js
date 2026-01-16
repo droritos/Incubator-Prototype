@@ -201,7 +201,7 @@ export default class Game {
             for (let i = 0; i < 5; i++) this.spawnEntity('rock');
         }
         // Crabs
-        for (let i = 0; i < 5; i++) this.spawnEntity('crab');
+        for (let i = 0; i < 0; i++) this.spawnEntity('crab');
         // Pirates (Few)
         for (let i = 0; i < 3; i++) this.spawnEntity('pirate');
 
@@ -367,9 +367,9 @@ export default class Game {
         const t = (angle - (index * sectorAngle)) / sectorAngle;
         const maxDist = r1 + (r2 - r1) * t;
 
-        if (dist > maxDist - 30) { // Increased buffer
+        if (dist > maxDist - 50) { // Maximum security buffer
             // Push back HARD
-            const overlap = dist - (maxDist - 30);
+            const overlap = dist - (maxDist - 50);
             entity.x -= Math.cos(angle) * overlap;
             entity.y -= Math.sin(angle) * overlap;
         }
@@ -463,7 +463,9 @@ export default class Game {
         // Find radius limit at this angle
         const points = this.islandVertices.length;
         const sectorAngle = (Math.PI * 2) / points;
-        const index = Math.floor(angle / sectorAngle);
+        let index = Math.floor(angle / sectorAngle);
+        index = index % points; // Safety wrap
+
         const nextIndex = (index + 1) % points;
         const r1 = this.islandVertices[index].r;
         const r2 = this.islandVertices[nextIndex].r;
@@ -471,7 +473,9 @@ export default class Game {
         const maxR = r1 + (r2 - r1) * t;
 
         // Random dist from 0 to maxR - padding
-        const dist = Math.sqrt(Math.random()) * (maxR - 50); // sqrt for uniform distribution
+        // Pad by 80 to ensure they spawn WELL inside the island
+        const safeR = Math.max(0, maxR - 80);
+        const dist = Math.sqrt(Math.random()) * safeR;
 
         const x = this.islandCenter.x + Math.cos(angle) * dist;
         const y = this.islandCenter.y + Math.sin(angle) * dist;
