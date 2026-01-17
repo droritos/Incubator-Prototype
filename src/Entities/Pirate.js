@@ -25,11 +25,13 @@ export default class Pirate {
         this.hp -= amount;
         if (this.hp <= 0) {
             this.markedForDeletion = true;
-            this.game.gold += 50; // High reward!
+            // Gold Logic
+            const reward = Math.floor(50 * this.game.stats.goldMultiplier);
+            this.game.gold += reward;
 
             // Effect
             import('../Entities/FloatingText.js').then(({ FloatingText }) => {
-                this.game.texts.push(new FloatingText("+50G", this.x, this.y, '#ffd700', 20));
+                this.game.texts.push(new FloatingText(`+${reward}G`, this.x, this.y, '#ffd700', 20));
             });
         }
     }
@@ -65,6 +67,14 @@ export default class Pirate {
         // Collision with player
         if (dist < 40) {
             this.game.energy -= 15 * dt; // Reduced damage (was 35).
+
+            // Thorns (Reflect Damage)
+            if (this.game.stats.thorns > 0) {
+                this.hp -= this.game.stats.thorns * dt;
+                if (this.hp <= 0 && !this.markedForDeletion) {
+                    this.takeDamage(999);
+                }
+            }
         }
 
         // Recovery

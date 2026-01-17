@@ -45,7 +45,12 @@ export default class Game {
             range: 80,
             arc: 0,
             cannonLevel: 0, // New Stat
-            petLevel: 0     // New Stat
+            petLevel: 0,     // New Stat
+            // Extended Skills
+            knockback: 0,     // Force
+            critChance: 0,    // 0.0 to 1.0
+            goldMultiplier: 1.0, // Multiplier for drops
+            thorns: 0         // Damage reflected
         };
 
         // Configuration

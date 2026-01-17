@@ -247,13 +247,31 @@ export default class Player {
 
                 if (Math.abs(angleDiff) < arc / 2) {
                     // HIT!
+
+                    // --- Calc Damage (Crit) ---
+                    let damage = this.game.stats.damage;
+                    let isCrit = Math.random() < this.game.stats.critChance;
+                    if (isCrit) damage *= 2;
+
+                    // --- Knockback ---
+                    if (this.game.stats.knockback > 0 && ent.hp > 0) {
+                        const pushForce = this.game.stats.knockback;
+                        // Normalize direction
+                        const pushX = dx / dist;
+                        const pushY = dy / dist;
+                        ent.x += pushX * (pushForce / 10); // Simple displacement
+                        ent.y += pushY * (pushForce / 10);
+                    }
+
                     if (ent.type === 'Chest') {
                         if (ent.hp > 0 && !ent.invulnerable) {
-                            ent.takeDamage(this.game.stats.damage);
+                            ent.takeDamage(damage);
 
                             // Float Text
                             import('./FloatingText.js').then(({ FloatingText }) => {
-                                this.game.texts.push(new FloatingText(this.game.stats.damage, ent.x, ent.y - 20, '#fff', 20));
+                                const color = isCrit ? '#ff00ff' : '#fff';
+                                const text = isCrit ? `CRIT! ${damage}` : damage;
+                                this.game.texts.push(new FloatingText(text, ent.x, ent.y - 20, color, isCrit ? 30 : 20));
                             });
 
                             ent.invulnerable = true;
@@ -276,23 +294,13 @@ export default class Player {
                             this.game.input.rockHitCooldown = true;
                             setTimeout(() => this.game.input.rockHitCooldown = false, 500);
                         }
-                    } else if (ent.type === 'Crab') {
+                    } else if (ent.type === 'Crab' || ent.type === 'Pirate') {
                         if (ent.hp > 0 && !ent.invulnerable) {
-                            const dmg = this.game.stats.damage;
-                            ent.takeDamage(dmg);
+                            ent.takeDamage(damage);
                             import('./FloatingText.js').then(({ FloatingText }) => {
-                                this.game.texts.push(new FloatingText(dmg, ent.x, ent.y - 20, '#fff', 20));
-                            });
-
-                            ent.invulnerable = true;
-                            setTimeout(() => ent.invulnerable = false, 250); // 0.25s i-frame
-                        }
-                    } else if (ent.type === 'Pirate') {
-                        if (ent.hp > 0 && !ent.invulnerable) {
-                            const dmg = this.game.stats.damage;
-                            ent.takeDamage(dmg);
-                            import('./FloatingText.js').then(({ FloatingText }) => {
-                                this.game.texts.push(new FloatingText(dmg, ent.x, ent.y - 40, '#ff0000', 20));
+                                const color = isCrit ? '#ff00ff' : (ent.type === 'Pirate' ? '#ff0000' : '#fff');
+                                const text = isCrit ? `CRIT! ${damage}` : damage;
+                                this.game.texts.push(new FloatingText(text, ent.x, ent.y - (ent.type === 'Pirate' ? 40 : 20), color, isCrit ? 30 : 20));
                             });
 
                             ent.invulnerable = true;

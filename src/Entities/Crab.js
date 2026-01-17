@@ -67,6 +67,14 @@ export default class Crab {
 
         if (dist < 30) {
             this.game.energy -= 20 * dt;
+
+            // Thorns (Reflect Damage)
+            if (this.game.stats.thorns > 0) {
+                this.hp -= this.game.stats.thorns * dt;
+                if (this.hp <= 0 && !this.markedForDeletion) {
+                    this.takeDamage(999); // Trigger death
+                }
+            }
         }
 
         // Recovery

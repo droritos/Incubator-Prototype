@@ -4,28 +4,91 @@ export const SKILL_TREE_DATA = [
         name: 'Pirate Basics',
         description: 'The start of your journey.',
         cost: 0,
-        x: 270, y: 40, // -30
+        x: 270, y: 40,
         effect: {},
         purchased: true,
         parent: null
     },
-    {
-        id: 'speed_1',
-        name: 'Peg Leg Polish',
-        description: '+10% Movement Speed',
-        cost: 50,
-        x: 170, y: 120, // -30
-        effect: { speed: 25 },
-        purchased: false,
-        parent: 'root'
-    },
+    // --- OFFENSE BRANCH (Right) ---
     {
         id: 'damage_1',
         name: 'Sharp Blade',
         description: '+25 Damage',
         cost: 100,
-        x: 370, y: 120, // -30
+        x: 370, y: 100,
         effect: { damage: 25 },
+        purchased: false,
+        parent: 'root'
+    },
+    {
+        id: 'speed_attack_1',
+        name: 'Berserker',
+        description: '+20% Atk Speed',
+        cost: 250,
+        x: 470, y: 100,
+        effect: { swingCooldown: -0.2 },
+        purchased: false,
+        parent: 'damage_1'
+    },
+    {
+        id: 'crit_1',
+        name: 'Lucky Strike',
+        description: '10% Crit Chance',
+        cost: 300,
+        x: 570, y: 100,
+        effect: { critChance: 0.1 },
+        purchased: false,
+        parent: 'speed_attack_1'
+    },
+    {
+        id: 'crit_2',
+        name: 'Gambler',
+        description: '+15% Crit Chance',
+        cost: 600,
+        x: 670, y: 100,
+        effect: { critChance: 0.15 },
+        purchased: false,
+        parent: 'crit_1'
+    },
+    {
+        id: 'arc_1',
+        name: 'Wild Swing',
+        description: 'Wider Swing Arc',
+        cost: 300,
+        x: 370, y: 180,
+        effect: { arc: 30 },
+        purchased: false,
+        parent: 'damage_1'
+    },
+    {
+        id: 'knockback_1',
+        name: 'Heavy Hand',
+        description: 'Add Knockback',
+        cost: 400,
+        x: 370, y: 260,
+        effect: { knockback: 200 }, // Impulse force
+        purchased: false,
+        parent: 'arc_1'
+    },
+    {
+        id: 'knockback_2',
+        name: 'Titan Force',
+        description: 'Massive Knockback',
+        cost: 800,
+        x: 370, y: 340,
+        effect: { knockback: 300 },
+        purchased: false,
+        parent: 'knockback_1'
+    },
+
+    // --- DEFENSE / UTILITY BRANCH (Center/Left) ---
+    {
+        id: 'speed_1',
+        name: 'Peg Leg Polish',
+        description: '+10% Movement Speed',
+        cost: 50,
+        x: 170, y: 100,
+        effect: { speed: 25 },
         purchased: false,
         parent: 'root'
     },
@@ -34,7 +97,7 @@ export const SKILL_TREE_DATA = [
         name: 'Quick Hands',
         description: '-10% Swing Cooldown',
         cost: 150,
-        x: 270, y: 200, // -30
+        x: 170, y: 180,
         effect: { swingCooldown: -0.1 },
         purchased: false,
         parent: 'speed_1'
@@ -44,47 +107,39 @@ export const SKILL_TREE_DATA = [
         name: 'Long Reach',
         description: '+20% Sword Range',
         cost: 200,
-        x: 70, y: 250, // -30
+        x: 70, y: 180,
         effect: { range: 10 },
         purchased: false,
         parent: 'speed_1'
     },
     {
-        id: 'arc_1',
-        name: 'Wild Swing',
-        description: 'Wider Swing Arc',
-        cost: 300,
-        x: 470, y: 250, // -30
-        effect: { arc: 30 },
+        id: 'thorns_1',
+        name: 'Spiked Vest',
+        description: 'Reflect 5 Damage',
+        cost: 350,
+        x: 270, y: 180, // Center
+        effect: { thorns: 5 },
         purchased: false,
-        parent: 'damage_1'
+        parent: 'root'
     },
     {
-        id: 'speed_attack_1',
-        name: 'Berserker',
-        description: '+20% Atk Speed',
-        cost: 250,
-        x: 470, y: 40, // -30
-        effect: { swingCooldown: -0.2 },
+        id: 'thorns_2',
+        name: 'Cactus Hug',
+        description: 'Reflect 10 Damage',
+        cost: 700,
+        x: 270, y: 260,
+        effect: { thorns: 10 },
         purchased: false,
-        parent: 'damage_1'
+        parent: 'thorns_1'
     },
-    {
-        id: 'cannon_1',
-        name: 'Ship Support',
-        description: 'Auto-fire Cannons',
-        cost: 500,
-        x: 60, y: 40, // -30
-        effect: { cannonLevel: 1 },
-        purchased: false,
-        parent: 'speed_1'
-    },
+
+    // --- SPECIALS / PETS (Bottom) ---
     {
         id: 'pet_1',
         name: 'New Friend',
         description: 'Unlock Carrot Pet',
         cost: 400,
-        x: 270, y: 280, // -30
+        x: 170, y: 260,
         effect: { petLevel: 1 },
         purchased: false,
         parent: 'cooldown_1'
@@ -94,10 +149,42 @@ export const SKILL_TREE_DATA = [
         name: 'Best Friend',
         description: 'Evolve to Parrot',
         cost: 1000,
-        x: 270, y: 360, // -30
+        x: 170, y: 340,
         effect: { petLevel: 1 },
         purchased: false,
         parent: 'pet_1'
+    },
+
+    // --- ECONOMY (Far Left) ---
+    {
+        id: 'cannon_1',
+        name: 'Ship Support',
+        description: 'Auto-fire Cannons',
+        cost: 500,
+        x: 70, y: 100,
+        effect: { cannonLevel: 1 },
+        purchased: false,
+        parent: 'speed_1'
+    },
+    {
+        id: 'gold_1',
+        name: 'Gold Rush',
+        description: '+20% Gold Drops',
+        cost: 400,
+        x: 70, y: 20, // High up left
+        effect: { goldMultiplier: 0.2 },
+        purchased: false,
+        parent: 'cannon_1'
+    },
+    {
+        id: 'gold_2',
+        name: 'Treasure Hunter',
+        description: '+30% Gold Drops',
+        cost: 800,
+        x: -20, y: 20, // Far left
+        effect: { goldMultiplier: 0.3 },
+        purchased: false,
+        parent: 'gold_1'
     }
 ];
 
@@ -134,6 +221,7 @@ export class SkillTree {
         this.svgContainer.style.height = '100%';
         this.svgContainer.style.pointerEvents = 'none';
         this.svgContainer.style.zIndex = '0'; // Behind nodes
+        this.svgContainer.style.overflow = 'visible'; // Allow lines outside?
         this.container.appendChild(this.svgContainer);
 
         this.nodes.forEach(node => {
@@ -201,7 +289,7 @@ export class SkillTree {
             this.render();
             this.game.ui.update();
         } else {
-            const el = document.querySelector(`.skill-node[style*="left: ${node.x}px"]`);
+            const el = document.querySelector(`.skill-node[style*="left: ${node.x}px"][style*="top: ${node.y}px"]`);
             if (el) {
                 el.classList.add('shake');
                 setTimeout(() => el.classList.remove('shake'), 500);
@@ -211,12 +299,19 @@ export class SkillTree {
 
     applyUpgrade(effect) {
         const stats = this.game.stats;
+        // Basic
         if (effect.speed) stats.speed += effect.speed;
         if (effect.damage) stats.damage += effect.damage;
         if (effect.swingCooldown) stats.swingCooldown += effect.swingCooldown;
         if (effect.range) stats.range += effect.range;
         if (effect.arc) stats.arc += effect.arc;
+
+        // Advanced
         if (effect.cannonLevel) stats.cannonLevel += effect.cannonLevel;
         if (effect.petLevel) stats.petLevel += effect.petLevel;
+        if (effect.knockback) stats.knockback += effect.knockback;
+        if (effect.critChance) stats.critChance += effect.critChance;
+        if (effect.goldMultiplier) stats.goldMultiplier += effect.goldMultiplier;
+        if (effect.thorns) stats.thorns += effect.thorns;
     }
 }
