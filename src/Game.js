@@ -461,49 +461,7 @@ export default class Game {
             this.ctx.lineWidth = 10;
             this.ctx.stroke();
 
-            // --- DEBUG: VISUALIZE PHYSICS BOUNDARY ---
-            this.ctx.beginPath();
-            this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-            this.ctx.lineWidth = 2;
 
-            // Raytrace the boundary at 100 steps
-            for (let a = 0; a < Math.PI * 2; a += 0.1) {
-                // REPLICATE CHECKBOUNDS MATH EXACTLY
-                let angle = a;
-                const points = this.islandVertices.length;
-                const sectorAngle = (Math.PI * 2) / points;
-                let index = Math.floor(angle / sectorAngle);
-                index = (index % points + points) % points;
-                const nextIndex = (index + 1) % points;
-                const v1 = this.islandVertices[index];
-                const v2 = this.islandVertices[nextIndex];
-
-                let maxDist = 0;
-                if (v1 && v2) {
-                    const v1x = v1.x - this.islandCenter.x;
-                    const v1y = v1.y - this.islandCenter.y;
-                    const v2x = v2.x - this.islandCenter.x;
-                    const v2y = v2.y - this.islandCenter.y;
-                    const nx = v1y - v2y;
-                    const ny = v2x - v1x;
-                    const distConstant = nx * v1x + ny * v1y;
-                    const rx = Math.cos(angle);
-                    const ry = Math.sin(angle);
-                    const denom = nx * rx + ny * ry;
-                    if (Math.abs(denom) > 0.001) maxDist = distConstant / denom;
-                    else maxDist = v1.r;
-                }
-
-                const limit = maxDist - 80;
-                const lx = this.islandCenter.x + Math.cos(angle) * limit;
-                const ly = this.islandCenter.y + Math.sin(angle) * limit;
-
-                if (a === 0) this.ctx.moveTo(lx, ly);
-                else this.ctx.lineTo(lx, ly);
-            }
-            this.ctx.closePath();
-            this.ctx.stroke();
-            // -----------------------------------------
         }
 
         if (this.state === 'PLAYING') {
