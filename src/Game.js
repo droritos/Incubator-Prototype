@@ -532,6 +532,7 @@ export default class Game {
         const points = this.islandVertices.length;
         const sectorAngle = (Math.PI * 2) / points;
         // Robust Modulo (handles negative or overflow)
+        let index = Math.floor(angle / sectorAngle);
         index = (index % points + points) % points;
 
         const nextIndex = (index + 1) % points;
