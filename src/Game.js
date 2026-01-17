@@ -390,7 +390,7 @@ export default class Game {
             maxDist = (a * b) / Math.sqrt(Math.pow(b * Math.cos(angle), 2) + Math.pow(a * Math.sin(angle), 2));
         }
 
-        const buffer = 80; // Buffer increased to 80
+        const buffer = 45; // Tuned buffer (was 80, too aggressive)
         if (dist > maxDist - buffer) {
             // Hard Clamp
             const limit = maxDist - buffer;
@@ -531,8 +531,8 @@ export default class Game {
         // Find radius limit at this angle
         const points = this.islandVertices.length;
         const sectorAngle = (Math.PI * 2) / points;
-        let index = Math.floor(angle / sectorAngle);
-        index = index % points; // Safety wrap
+        // Robust Modulo (handles negative or overflow)
+        index = (index % points + points) % points;
 
         const nextIndex = (index + 1) % points;
         const r1 = this.islandVertices[index].r;
@@ -541,8 +541,8 @@ export default class Game {
         const maxR = r1 + (r2 - r1) * t;
 
         // Random dist from 0 to maxR - padding
-        // Pad by 80 to ensure they spawn WELL inside the island
-        const safeR = Math.max(0, maxR - 80);
+        // Pad by 60 to spawn safely inside
+        const safeR = Math.max(0, maxR - 60);
         const dist = Math.sqrt(Math.random()) * safeR;
 
         const x = this.islandCenter.x + Math.cos(angle) * dist;
