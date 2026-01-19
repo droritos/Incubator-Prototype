@@ -344,10 +344,11 @@ export default class Player {
     }
 
     draw(ctx) {
-        // Shadow
+        // Shadow (At feet)
         ctx.fillStyle = 'rgba(0,0,0,0.2)';
         ctx.beginPath();
-        ctx.ellipse(this.x, this.y, this.width / 2, 12, 0, 0, Math.PI * 2);
+        // Offset Y by height/2 (approx 32px) to be under feet
+        ctx.ellipse(this.x, this.y + 25, this.width / 2, 8, 0, 0, Math.PI * 2);
         ctx.fill();
 
         const reach = 50 + this.game.stats.range;

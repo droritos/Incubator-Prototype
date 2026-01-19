@@ -118,33 +118,54 @@ export class Particle {
     draw(ctx) {
         ctx.save();
         ctx.globalAlpha = Math.max(0, this.life / this.initialLife);
-        if (this.type === 'coin') ctx.globalAlpha = 1; // Coins don't fade
+        if (this.type === 'coin') ctx.globalAlpha = 1;
 
-        ctx.fillStyle = this.color;
+        if (this.game.assets.particles) {
+            const img = this.game.assets.particles;
+            // Sheet has 4 items. Coin, Blood, Smoke, Wood
+            // Assume 1024x256 or similar ratio (4x1)
+            const frameWidth = img.width / 4;
+            const frameHeight = img.height;
 
-        if (this.type === 'coin') {
-            ctx.fillStyle = '#ffd700';
-            ctx.shadowColor = '#fea';
-            ctx.shadowBlur = 10;
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, 6, 0, Math.PI * 2);
-            ctx.fill();
-            // Shine
-            ctx.fillStyle = '#fff';
-            ctx.beginPath();
-            ctx.arc(this.x - 2, this.y - 2, 2, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (this.type === 'spark' || this.type === 'burst' || this.type === 'dust') {
+            let frame = 0;
+            let rotate = true;
+            let scale = 1.0;
+
+            if (this.type === 'coin') {
+                frame = 0;
+                this.size = 20; // Bigger visible size
+                rotate = false;
+            } else if (this.type === 'blood' || this.type === 'splinter' && this.color === '#cc0000') {
+                frame = 1;
+                this.size = 15;
+            } else if (this.type === 'smoke' || this.type === 'dust' || this.type === 'burst' && this.color !== '#cc0000') {
+                frame = 2; // Smoke
+                this.size = 20;
+            } else if (this.type === 'splinter') {
+                frame = 3; // Wood
+                this.size = 15;
+            } else {
+                // Fallback for sparks etc
+                frame = 0;
+                scale = 0.5;
+            }
+
+            const x = this.x;
+            const y = this.y;
+            const w = this.size;
+            const h = this.size;
+
+            ctx.translate(x, y);
+            if (rotate) ctx.rotate(this.game.lastTime * 0.005 + x);
+
+            ctx.drawImage(img, frame * frameWidth, 0, frameWidth, frameHeight, -w / 2, -h / 2, w, h);
+
+        } else {
+            // Fallback to primitives if image failed
+            ctx.fillStyle = this.color;
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
             ctx.fill();
-        } else {
-            // Splinters rotate
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(this.game.lastTime * 0.01 + this.x); // Random-ish spin
-            ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
-            ctx.restore();
         }
 
         ctx.restore();
