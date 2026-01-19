@@ -133,31 +133,38 @@ export class Particle {
 
             if (this.type === 'coin') {
                 frame = 0;
-                this.size = 20; // Bigger visible size
+                this.size = 28; // Much Bigger
                 rotate = false;
+                // Fake 3D Spin (Flip width)
+                const spinSpeed = 10;
+                scale = Math.sin(this.game.lastTime * 0.005 * spinSpeed + this.x);
             } else if (this.type === 'blood' || this.type === 'splinter' && this.color === '#cc0000') {
                 frame = 1;
-                this.size = 15;
+                this.size = 20;
+                rotate = false; // Liquid shouldn't spin on Z
             } else if (this.type === 'smoke' || this.type === 'dust' || this.type === 'burst' && this.color !== '#cc0000') {
                 frame = 2; // Smoke
-                this.size = 20;
+                this.size = 30; // Bigger clouds
+                rotate = true; // Smoke rolling is okay
             } else if (this.type === 'splinter') {
                 frame = 3; // Wood
-                this.size = 15;
+                this.size = 22;
+                rotate = true; // Splinters spinning is good
             } else {
-                // Fallback for sparks etc
                 frame = 0;
                 scale = 0.5;
             }
 
             const x = this.x;
             const y = this.y;
-            const w = this.size;
+            // Apply scale (Coin Flip)
+            const w = this.size * Math.abs(scale);
             const h = this.size;
 
             ctx.translate(x, y);
             if (rotate) ctx.rotate(this.game.lastTime * 0.005 + x);
 
+            // Draw centered
             ctx.drawImage(img, frame * frameWidth, 0, frameWidth, frameHeight, -w / 2, -h / 2, w, h);
 
         } else {
