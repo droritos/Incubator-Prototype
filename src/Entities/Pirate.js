@@ -23,14 +23,29 @@ export default class Pirate {
 
     takeDamage(amount) {
         this.hp -= amount;
+
+        // Hit Effects
+        this.game.shake = 2;
+        import('../Entities/Particle.js').then(({ spawnParticles }) => {
+            spawnParticles(this.game, this.x, this.y, '#cc0000', 3, 'splinter'); // Blood
+        });
+
         if (this.hp <= 0) {
             this.markedForDeletion = true;
+
+            // Death Effects
+            this.game.shake = 10;
+            import('../Entities/Particle.js').then(({ spawnParticles }) => {
+                spawnParticles(this.game, this.x, this.y, '#cc0000', 15, 'burst'); // Big Blood
+                spawnParticles(this.game, this.x, this.y, '#ffffff', 5, 'dust'); // Smoke poof
+            });
             // Gold Logic
             const reward = Math.floor(50 * this.game.stats.goldMultiplier);
 
             // JUICE: Visual Coins
             import('../Entities/Particle.js').then(({ spawnParticles }) => {
-                spawnParticles(this.game, this.x, this.y, '#ffd700', 5, 'coin'); // Spawn 5 visual coins
+                const coins = spawnParticles(this.game, this.x, this.y, '#ffd700', 5, 'coin');
+                coins.forEach(c => c.value = reward / 5);
             });
 
             // Effect

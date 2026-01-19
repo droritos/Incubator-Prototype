@@ -34,12 +34,17 @@ export default class Chest {
 
         if (this.hp <= 0) {
             this.markedForDeletion = true;
-            this.game.gold += 50; // Dropped gold
+            // this.game.gold += 50; // REMOVED direct add
+            const reward = 50;
 
             // Particles
             import('./Particle.js').then(({ spawnParticles }) => {
                 spawnParticles(this.game, this.x, this.y, '#ffd700', 20, 'burst');
                 spawnParticles(this.game, this.x, this.y, '#8B4513', 10, 'splinter');
+
+                // Coins
+                const coins = spawnParticles(this.game, this.x, this.y, '#ffd700', 10, 'coin');
+                coins.forEach(c => c.value = reward / 10);
             });
 
             // Float Text

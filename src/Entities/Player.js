@@ -27,7 +27,12 @@ export default class Player {
         this.pistolTimer = 0;
         this.pistolAnimTimer = 0;
         this.pistolAnimDuration = 0.6; // Slower animation
+        this.pistolAnimDuration = 0.6; // Slower animation
         this.pistolTargetAngle = 0;
+
+        // Juice
+        this.dustTimer = 0;
+        this.bobTimer = 0;
     }
 
     update(dt) {
@@ -55,6 +60,18 @@ export default class Player {
 
                 if (moveX > 0) this.facingX = 1;
                 if (moveX < 0) this.facingX = -1;
+
+                // JUICE: Dust
+                this.dustTimer -= dt;
+                if (this.dustTimer <= 0) {
+                    this.dustTimer = 0.15;
+                    import('./Particle.js').then(({ spawnParticles }) => {
+                        spawnParticles(this.game, this.x, this.y + 20, '#d2b48c', 2, 'dust');
+                    });
+                }
+                this.bobTimer += dt * 15;
+            } else {
+                this.bobTimer = 0;
             }
 
             this.x += moveX * this.speed * dt;
@@ -125,6 +142,20 @@ export default class Player {
 
                 this.x += moveX * this.speed * dt;
                 this.y += moveY * this.speed * dt;
+
+                // JUICE: Dust
+                this.dustTimer -= dt;
+                if (this.dustTimer <= 0) {
+                    this.dustTimer = 0.15;
+                    import('./Particle.js').then(({ spawnParticles }) => {
+                        spawnParticles(this.game, this.x, this.y + 20, '#d2b48c', 2, 'dust');
+                    });
+                }
+
+                // JUICE: Bob
+                this.bobTimer += dt * 15;
+            } else {
+                this.bobTimer = 0; // Reset when stopped
             }
         }
 
@@ -342,7 +373,13 @@ export default class Player {
         if (this.game.assets && this.game.assets.player) {
             // Draw sprite upright ("angle" 0), scaled by facingX
             // Adjust offset to keep centered
-            drawSprite(ctx, this.game.assets.player, this.x, this.y, this.width, this.height, 0, this.facingX);
+
+            // JUICE: Tilt & Bob
+            const tilt = (this.facingX * 0.1); // Slight lean forward? No, lean into run
+            const bob = Math.sin(this.bobTimer) * 3;
+            const stretch = 1 + Math.abs(Math.sin(this.bobTimer) * 0.05);
+
+            drawSprite(ctx, this.game.assets.player, this.x, this.y - bob, this.width, this.height * stretch, tilt, this.facingX);
         } else {
             drawBlockyRect(ctx, this.x, this.y, 30, 50, this.color);
         }

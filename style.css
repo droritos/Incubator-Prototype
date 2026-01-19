@@ -441,3 +441,21 @@ input:checked+.slider:before {
   border-style: solid;
   border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
 }
+
+/* JUICE: UI Animations */
+button:hover,
+.btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+}
+
+button:active,
+.btn:active {
+  transform: scale(0.95);
+  transition: transform 0.05s;
+}
+
+#shop-finish-btn:active {
+  transform: translateX(-50%) scale(0.95) !important;
+  /* Override layout transform */
+}

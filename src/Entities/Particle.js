@@ -103,7 +103,8 @@ export class Particle {
             if (dist < 30) {
                 // Arrived!
                 this.markedForDeletion = true;
-                this.game.addGold(1); // Add actual gold here
+                const val = this.value || 1;
+                this.game.addGold(val);
                 return;
             }
 
@@ -151,7 +152,11 @@ export class Particle {
 }
 
 export function spawnParticles(game, x, y, color, count, type) {
+    const spawned = [];
     for (let i = 0; i < count; i++) {
-        game.particles.push(new Particle(game, x, y, color, type));
+        const p = new Particle(game, x, y, color, type);
+        game.particles.push(p);
+        spawned.push(p);
     }
+    return spawned;
 }
