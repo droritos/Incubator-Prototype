@@ -122,10 +122,12 @@ export class Particle {
 
         if (this.game.assets.particles) {
             const img = this.game.assets.particles;
-            // Sheet has 4 items. Coin, Blood, Smoke, Wood
-            // Assume 1024x256 or similar ratio (4x1)
+            // Sheet has 4 items in a row.
+            // Assume image is square (e.g. 1024x1024), so each column is 1/4 width.
+            // But height is full image height. We want to crop a square from the middle vertical.
             const frameWidth = img.width / 4;
-            const frameHeight = img.height;
+            const frameHeight = frameWidth; // Force square aspect
+            const offsetY = (img.height - frameHeight) / 2; // Center vertically
 
             let frame = 0;
             let rotate = true;
@@ -165,7 +167,7 @@ export class Particle {
             if (rotate) ctx.rotate(this.game.lastTime * 0.005 + x);
 
             // Draw centered
-            ctx.drawImage(img, frame * frameWidth, 0, frameWidth, frameHeight, -w / 2, -h / 2, w, h);
+            ctx.drawImage(img, frame * frameWidth, offsetY, frameWidth, frameHeight, -w / 2, -h / 2, w, h);
 
         } else {
             // Fallback to primitives if image failed
