@@ -36,7 +36,7 @@ export default class Player {
         if (this.pistolAnimTimer > 0) this.pistolAnimTimer -= dt;
 
         if (this.game.input.fire && this.pistolTimer <= 0) {
-            this.firePistol();
+            // this.firePistol(); // Disabled by user request
         }
 
         if (this.game.controlMode === 'WASD') {

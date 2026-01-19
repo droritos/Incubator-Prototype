@@ -203,7 +203,7 @@ export default class Game {
         // Chests
         for (let i = 0; i < 7; i++) this.spawnEntity('chest');
         // Rocks
-        if (this.rocksEnabled) {
+        if (this.rocksEnabled && false) { // Disabled by user request
             for (let i = 0; i < 5; i++) this.spawnEntity('rock');
         }
         // Crabs
