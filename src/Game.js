@@ -79,6 +79,11 @@ export default class Game {
         this.hitStopDuration = duration;
     }
 
+    addGold(amount) {
+        this.gold += amount;
+        // JUICE: Tiny shake or pulse effect on gold UI could go here
+    }
+
     loadAssets() {
         // Helper to load and process
         const load = (name, src) => {

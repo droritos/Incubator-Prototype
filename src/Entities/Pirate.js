@@ -27,7 +27,11 @@ export default class Pirate {
             this.markedForDeletion = true;
             // Gold Logic
             const reward = Math.floor(50 * this.game.stats.goldMultiplier);
-            this.game.gold += reward;
+
+            // JUICE: Visual Coins
+            import('../Entities/Particle.js').then(({ spawnParticles }) => {
+                spawnParticles(this.game, this.x, this.y, '#ffd700', 5, 'coin'); // Spawn 5 visual coins
+            });
 
             // Effect
             import('../Entities/FloatingText.js').then(({ FloatingText }) => {
