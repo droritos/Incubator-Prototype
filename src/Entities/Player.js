@@ -285,13 +285,16 @@ export default class Player {
                     if (isCrit) damage *= 2;
 
                     // --- Knockback ---
-                    if (this.game.stats.knockback > 0 && ent.hp > 0) {
+                    if (this.game.stats.knockback > 0 && ent.hp > 0 && ent.type !== 'Chest') {
                         const pushForce = this.game.stats.knockback;
                         // Normalize direction
                         const pushX = dx / dist;
                         const pushY = dy / dist;
-                        ent.x += pushX * (pushForce / 10); // Simple displacement
-                        ent.y += pushY * (pushForce / 10);
+                        
+                        // Apply as velocity instead of instant displacement
+                        // We use a multiplier to ensure the push feels impactful
+                        ent.knockbackX = pushX * pushForce * 5; 
+                        ent.knockbackY = pushY * pushForce * 5;
                     }
 
                     if (ent.type === 'Chest') {

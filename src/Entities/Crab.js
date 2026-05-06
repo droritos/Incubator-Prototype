@@ -22,6 +22,11 @@ export default class Crab {
 
         this.flashTimer = 0;
         this.scaleY = 1.0;
+
+        // Knockback Velocity
+        this.knockbackX = 0;
+        this.knockbackY = 0;
+        this.knockbackFriction = 8.0; // Decay rate
     }
 
     takeDamage(amount) {
@@ -55,6 +60,16 @@ export default class Crab {
 
         this.x += this.dirX * this.speed * dt;
         this.y += this.dirY * this.speed * dt;
+
+        // Apply Knockback Velocity
+        this.x += this.knockbackX * dt;
+        this.y += this.knockbackY * dt;
+
+        // Decay Knockback
+        this.knockbackX -= this.knockbackX * this.knockbackFriction * dt;
+        this.knockbackY -= this.knockbackY * this.knockbackFriction * dt;
+        if (Math.abs(this.knockbackX) < 1) this.knockbackX = 0;
+        if (Math.abs(this.knockbackY) < 1) this.knockbackY = 0;
 
         // Bounce bounds
         if (this.x < 0 || this.x > this.game.canvas.width) this.dirX *= -1;

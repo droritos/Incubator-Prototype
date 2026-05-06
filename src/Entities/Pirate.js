@@ -19,6 +19,11 @@ export default class Pirate {
 
         this.changeDirTimer = 0;
         this.invulnerable = false;
+
+        // Knockback Velocity
+        this.knockbackX = 0;
+        this.knockbackY = 0;
+        this.knockbackFriction = 8.0; // Decay rate
     }
 
     takeDamage(amount) {
@@ -80,6 +85,16 @@ export default class Pirate {
             this.x += this.dirX * (this.speed * 0.5) * dt; // Slower patrol
             this.y += this.dirY * (this.speed * 0.5) * dt;
         }
+
+        // Apply Knockback Velocity
+        this.x += this.knockbackX * dt;
+        this.y += this.knockbackY * dt;
+
+        // Decay Knockback
+        this.knockbackX -= this.knockbackX * this.knockbackFriction * dt;
+        this.knockbackY -= this.knockbackY * this.knockbackFriction * dt;
+        if (Math.abs(this.knockbackX) < 1) this.knockbackX = 0;
+        if (Math.abs(this.knockbackY) < 1) this.knockbackY = 0;
 
 
 
